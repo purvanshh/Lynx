@@ -1,104 +1,271 @@
 # Lynx Candidate Identification System
 
-Lynx is a real-time candidate identification platform for live interview sessions. It combines multiple weak signals, fuses them through a Bayesian log-odds arbitrator, and returns a ranked candidate prediction with evidence, confidence, and a human-readable explanation trail.
+Lynx is a real-time, multi-agent Bayesian fusion system that automatically identifies the interview candidate from a pool of video conference participants. It continuously evaluates evidence across six independent signal agents, fuses them through a weighted log-odds arbitrator, and produces explainable confidence scores with a full human-readable audit trail for every identification decision.
 
-The repository is being built in implementation phases. The current codebase already supports core evidence fusion, event-driven session updates, and scenario playback scaffolding, while the roadmap extends toward a full demo-ready product with richer simulation, dashboard visualization, and production-grade integrations.
+During a live interview on Google Meet, Teams, or Zoom, Lynx answers a single operational question with precision: *Which participant is the candidate right now, and why?*
 
-## Vision
+---
 
-Lynx is designed to answer a specific operational question during a live interview:
+## What Lynx Does
 
-`Which participant is most likely the interview candidate right now, and why?`
+Lynx ingests live session events — participant joins, display name changes, speaking activity, transcript utterances, and sampled webcam frames — and maintains a continuously updated candidate probability for every participant in the room. It does not rely on any single signal. Instead, it treats candidate identification as an evidence fusion problem: multiple lightweight agents each produce a scored opinion, and a central arbitrator blends those opinions into a calibrated posterior probability.
 
-To answer that reliably, the system combines:
+The system explains every decision. When Lynx identifies a participant as the candidate, it surfaces the exact evidence that led to that conclusion — which agents fired, what they observed, how heavily they were weighted, and what reasoning they provided. When the evidence is ambiguous, Lynx explicitly flags uncertainty rather than forcing a wrong confident call.
 
-- Identity heuristics from names and email handles
-- Join-time behavior around the scheduled start
-- Speaking-pattern analysis from transcript activity
-- Solo-window detection before interviewers join
-- Webcam consistency checks across sampled frames
-- LLM-based synthesis for edge cases and explanation
+---
 
-## Current Capabilities
+## Core Capabilities
 
-The implementation in this repository currently provides:
+### Multi-Agent Evidence Fusion
 
-- A FastAPI backend for session retrieval and live candidate evaluation
-- A central agent orchestrator that evaluates all enabled agents per participant
-- Bayesian evidence fusion with global weight redistribution for inactive agents
-- Candidate scoring with:
-  - `NameMatcherAgent`
-  - `TemporalAgent`
-  - `BehavioralAgent`
-  - `SoloWindowAgent`
-  - `FaceConsistencyAgent`
-  - `LLMReasoningAgent`
-- Session creation and event injection endpoints
-- Confidence-history tracking over time
-- A simulator scheduler that can load scenario JSON, emit ordered events, and drive the API
-- Unit and integration tests covering the orchestration and API pipeline
+Lynx runs six independent signal agents against every participant in a session:
 
-## Roadmap Capabilities
+| Agent | Signal | Weight |
+|-------|--------|--------|
+| **NameMatcher** | Fuzzy match of display name against candidate name, email prefix, and interviewer negative list | 0.15 |
+| **Temporal** | Join time relative to scheduled start — candidates join within a tight window | 0.20 |
+| **Behavioral** | Speaking pattern analysis — burst responses vs. uniform interviewer turns | 0.25 |
+| **SoloWindow** | Detection of solo presence before others join — a near-certain candidate signal | 0.25 |
+| **FaceConsistency** | Intra-session face consistency via MediaPipe — single face, no switching | 0.10 |
+| **LLMReasoning** | Cross-signal synthesis and edge-case reasoning via Claude | 0.05 |
 
-The planned full system extends beyond the current implementation and is intended to support:
+Each agent returns a probability score and a natural language reasoning string. The system handles missing signals gracefully: if an agent cannot produce a score for any participant — for example, when no solo window exists or all webcams are off — its weight is automatically redistributed across the remaining active agents.
 
-- Richer interview scenarios across ambiguous and adversarial meeting setups
-- Dashboard views for evidence panels, confidence trends, and timeline playback
-- More realistic simulator data, including transcript streams, webcam sampling, and speaking activity
-- Stronger LLM integration for structured justification and sanity-check reasoning
-- Expanded API coverage for demo operations, debugging, and observability
-- Production-oriented persistence, deployment, and monitoring workflows
+### Bayesian Log-Odds Arbitrator
 
-In short, the repo is moving from a strong backend prototype toward a complete PRD-aligned live demo system.
+The central arbitrator fuses agent opinions using log-odds linear pooling with prior retention. This is a mathematically standard ensemble method that avoids the score-collapse problem of naive multiplicative blending. The arbitrator:
 
-## Architecture Overview
+- Converts agent scores and the current prior into log-odds space
+- Computes a weighted average, retaining a fraction of the prior proportional to inactive agent weight
+- Converts back to odds and normalizes across all participants
+- Iterates: the posterior from one cycle becomes the prior for the next
 
-At a high level, Lynx works as follows:
+Update cycles trigger every 30 seconds and immediately on any participant event — joins, leaves, name changes, or webcam toggles.
 
-1. A session is created with candidate metadata and interview schedule context.
-2. Live or simulated events update participants, transcript data, webcam observations, and speaking activity.
-3. The orchestrator asks each agent to score every participant.
-4. The arbitrator fuses those signals into posterior candidate probabilities.
-5. The API returns the current top candidate, evidence items, confidence tier, and explanation.
-6. Confidence history is stored so the system can show how certainty evolves during the interview.
+### Confidence Tiers & Uncertainty Handling
+
+Lynx surfaces four confidence tiers:
+
+| Tier | Range | Behavior |
+|------|-------|----------|
+| **HIGH** | ≥ 0.85 | Confident candidate identification |
+| **MEDIUM** | 0.65 – 0.84 | Likely candidate, monitoring continues |
+| **LOW** | 0.45 – 0.64 | Weak signal, no commitment |
+| **UNCERTAIN** | < 0.45 | Explicit ambiguity flag, human review recommended |
+
+The system never forces a HIGH confidence output. If evidence is genuinely ambiguous — for instance, when all participants have generic device names and join simultaneously — Lynx flags the top two candidates with reasoning and requests human review.
+
+### Real-Time Session API
+
+Lynx exposes a complete FastAPI surface for session lifecycle and live evaluation:
+
+- `POST /sessions` — Create a session with candidate metadata, interviewer names, and scheduled start time
+- `GET /sessions/{id}` — Retrieve full session state
+- `GET /sessions/{id}/participants` — List all participants with current scores
+- `POST /sessions/{id}/events` — Inject live events: participant joins, leaves, name changes, transcript utterances, speaking activity, webcam frames
+- `GET /sessions/{id}/candidate` — Get the current top candidate with full evidence array, confidence tier, and arbitrator explanation
+- `GET /sessions/{id}/confidence-history` — Time-series of probability evolution per participant
+- `GET /health` — Service health check
+
+Event injection triggers an immediate re-evaluation pipeline: orchestrator → agents → arbitrator → updated confidence store.
+
+### Mock Meeting Simulator
+
+The simulator loads scenario configurations and emits timed events in real time, driving the API exactly as a live meeting would. It supports playback speed multipliers — run a 30-minute interview at 5× speed for rapid testing.
+
+Seven predefined scenarios cover the full edge-case matrix:
+
+1. **Happy Path** — Candidate joins with correct name, webcam on, solo window
+2. **Generic Device Name** — Candidate appears as "MacBook Pro" or "iPhone"
+3. **Multiple Interviewers + Observers** — Distinguishing candidate from a crowded room
+4. **Name Change Mid-Session** — Candidate updates display name after joining
+5. **Interviewer Enters Candidate Name** — An interviewer accidentally uses the candidate's display name
+6. **No Solo Window** — Everyone joins simultaneously; the strongest signal is absent
+7. **Webcam Off Throughout** — No face consistency signal available
+
+Each scenario includes complete participant arrays, speaking patterns, transcript streams, join offsets, and ground truth labels for automated evaluation.
+
+### Evaluation Framework
+
+The evaluation runner executes all seven scenarios against the live API and measures:
+
+- **Identification Accuracy** — Correct candidate identified at session end
+- **Time-to-Correct-ID** — Seconds from start to first HIGH confidence correct call
+- **Confidence at Identification** — Probability score at the moment of identification
+- **False Positive Rate** — Wrong participant flagged as HIGH confidence
+- **Uncertainty Flag Rate** — Correct ambiguity flags in ambiguous scenarios
+
+Results are produced as a structured JSON report with pass/fail assertions against PRD targets.
+
+### Live Dashboard
+
+The React dashboard provides a real-time operational view of any active session:
+
+- **Confidence Meter** — Color-coded gauge showing the top candidate's probability and tier
+- **Evidence Panel** — Complete agent breakdown with scores, weights, and reasoning strings
+- **Participant Cards** — Per-participant probability, evidence list, and webcam status
+- **Session Timeline** — Chronological visualization of joins, leaves, speaking events, and transcript utterances
+- **Uncertainty Banner** — Dynamic alert when confidence drops to UNCERTAIN, surfacing the top two candidates and recommending human review
+
+The dashboard polls the API every five seconds and maintains a live view of confidence evolution.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MOCK MEETING SIMULATOR                     │
+│         (Scenario configs → real-time event emission)         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                        EVENT STREAM                           │
+└─────────────────────────────────────────────────────────────┘
+        │                              │
+        ▼                              ▼
+┌──────────────────┐      ┌──────────────────────────────────┐
+│ AGENT ORCHESTRATOR│      │    EXTERNAL METADATA STORE       │
+│  ┌────────────┐  │      │  • candidate_name                │
+│  │ NameMatcher│  │      │  • candidate_email               │
+│  ├────────────┤  │      │  • interviewer_names           │
+│  │ Temporal   │  │      │  • scheduled_start_time          │
+│  ├────────────┤  │      │  • calendar_invite_text          │
+│  │ Behavioral │  │      └──────────────────────────────────┘
+│  ├────────────┤  │
+│  │ SoloWindow │  │
+│  ├────────────┤  │
+│  │ FaceConsistency│ │
+│  ├────────────┤  │
+│  │ LLMReasoning│  │
+│  └────────────┘  │
+└────────┬─────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 BAYESIAN LOG-ODDS ARBITRATOR                  │
+│      (Weighted fusion, dynamic redistribution,                │
+│       prior retention, multi-class normalization)             │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     CONFIDENCE STORE                          │
+│         (Per-participant, timestamped probability history)    │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    REST API (FastAPI)                         │
+│         • Session management                                  │
+│         • Event ingestion                                     │
+│         • Candidate evaluation                                │
+│         • Confidence history                                  │
+└─────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   DASHBOARD UI (React)                        │
+│         • Live confidence updates                             │
+│         • Evidence breakdown                                  │
+│         • Timeline visualization                              │
+│         • Uncertainty alerts                                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Key architectural decisions:
+
+- **Custom orchestration, not LangGraph** — Simpler, more inspectable, no framework lock-in
+- **Log-odds fusion, not naive multiplication** — Prevents score collapse, mathematically sound multi-class extension
+- **MediaPipe face detection** — Lightweight, CPU-only, no GPU dependency
+- **RapidFuzz** — Fast token-sort ratio for name matching with typo and nickname tolerance
+- **In-memory store with JSON persistence** — Sufficient for prototype scope; Redis-ready for production scale
+
+---
 
 ## Repository Structure
 
-```text
+```
 lynx/
-├── lynx/                     # Backend application code
-│   ├── agents/               # Signal-producing agents
-│   ├── api/                  # FastAPI routes and schemas
-│   ├── arbitrator/           # Bayesian fusion logic
-│   ├── models/               # Pydantic domain models
-│   ├── store/                # Session storage layer
-│   └── utils/                # Shared helpers
-├── simulator/                # Scenario playback and event scheduling
-├── dashboard/                # Frontend shell for future visualization work
-├── tests/                    # Unit and integration test coverage
-├── docs/                     # PRD, architecture, and API notes
-├── scripts/                  # Local development entry points
-├── requirements.txt          # Runtime and test dependencies
-└── pyproject.toml            # Project metadata and pytest config
+├── lynx/                          # Backend application
+│   ├── agents/                    # Signal agents
+│   │   ├── name_matcher.py
+│   │   ├── temporal.py
+│   │   ├── behavioral.py
+│   │   ├── solo_window.py
+│   │   ├── face_consistency.py
+│   │   └── llm_reasoning.py
+│   ├── api/                       # FastAPI routes and schemas
+│   ├── arbitrator/                # Log-odds fusion engine
+│   ├── models/                    # Pydantic domain models
+│   ├── store/                     # Session storage layer
+│   └── utils/                     # Shared helpers
+│
+├── simulator/                     # Scenario playback and scheduling
+│   ├── scheduler.py
+│   ├── main.py
+│   └── scenarios/                 # 7 predefined edge-case scenarios
+│       ├── happy_path.json
+│       ├── generic_name.json
+│       ├── multiple_interviewers.json
+│       ├── name_change.json
+│       ├── interviewer_candidate_name.json
+│       ├── no_solo_window.json
+│       └── webcam_off.json
+│
+├── dashboard/                     # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ConfidenceMeter.tsx
+│   │   │   ├── EvidencePanel.tsx
+│   │   │   ├── ParticipantCard.tsx
+│   │   │   ├── SessionTimeline.tsx
+│   │   │   └── UncertaintyBanner.tsx
+│   │   ├── hooks/
+│   │   │   └── useSession.ts
+│   │   ├── api/
+│   │   │   └── client.ts
+│   │   └── types/
+│   │       └── index.ts
+│   └── public/
+│
+├── tests/                         # Unit and integration tests
+│   ├── unit/
+│   └── integration/
+│
+├── docs/                          # Documentation
+│   ├── PRD.md
+│   ├── ARCHITECTURE.md
+│   └── API.md
+│
+├── scripts/                       # Development utilities
+│   ├── run_simulator.py
+│   ├── evaluate.py
+│   └── seed_data.py
+│
+├── requirements.txt
+└── pyproject.toml
 ```
 
-## API Surface
-
-The backend currently exposes these primary endpoints:
-
-- `GET /health`
-- `POST /sessions`
-- `GET /sessions/{session_id}`
-- `GET /sessions/{session_id}/participants`
-- `POST /sessions/{session_id}/events`
-- `GET /sessions/{session_id}/candidate`
-- `GET /sessions/{session_id}/confidence-history`
-
-These endpoints are sufficient to create a session, stream updates into it, evaluate the current candidate, and inspect confidence evolution.
+---
 
 ## Quick Start
 
-### Backend
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+ (for dashboard)
+- An Anthropic API key (for LLMReasoningAgent)
+
+### Environment Setup
+
+```bash
+cp .env.example .env
+# Edit .env and add your LYNX_LLM_API_KEY
+```
+
+### Run the Backend
 
 ```bash
 python -m venv .venv
@@ -107,15 +274,9 @@ pip install -r requirements.txt
 uvicorn lynx.api.main:app --reload
 ```
 
-### Simulator
+The API is available at `http://localhost:8000`. Interactive docs are at `http://localhost:8000/docs`.
 
-```bash
-python scripts/run_simulator.py
-```
-
-For richer scenario playback, the scheduler is built to support JSON scenarios with timed event emission and API injection.
-
-### Dashboard
+### Run the Dashboard
 
 ```bash
 cd dashboard
@@ -123,25 +284,190 @@ npm install
 npm run dev
 ```
 
-### Tests
+The dashboard connects to the backend at `http://localhost:8000` and polls for live updates.
+
+### Run a Scenario
+
+```bash
+python scripts/run_simulator.py simulator/scenarios/happy_path.json --speed 2.0
+```
+
+This loads the happy path scenario, emits events at 2× speed, and injects them into the running API.
+
+### Run the Evaluation Suite
+
+```bash
+python scripts/evaluate.py
+```
+
+This executes all seven scenarios, measures identification accuracy, time-to-correct-ID, confidence scores, and false positive rates, and produces a structured evaluation report.
+
+### Run Tests
 
 ```bash
 pytest
 ```
 
+The test suite covers all six agents, the log-odds arbitrator, weight redistribution, the event scheduler, and end-to-end API flows.
+
+---
+
+## API Usage Example
+
+### Create a Session
+
+```bash
+curl -X POST http://localhost:8000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "candidate_name": "Rahul Sharma",
+    "candidate_email": "rahul.sharma@example.com",
+    "interviewer_names": ["Alice Chen"],
+    "scheduled_start_time": "2024-01-15T10:00:00Z"
+  }'
+```
+
+### Inject a Participant Join Event
+
+```bash
+curl -X POST http://localhost:8000/sessions/{session_id}/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "participant_join",
+    "participant_id": "p_001",
+    "display_name": "MacBook Pro",
+    "timestamp": "2024-01-15T09:58:00Z"
+  }'
+```
+
+### Get the Current Candidate
+
+```bash
+curl http://localhost:8000/sessions/{session_id}/candidate
+```
+
+Response:
+
+```json
+{
+  "participant_id": "p_001",
+  "display_name": "MacBook Pro",
+  "candidate_probability": 0.87,
+  "is_candidate": true,
+  "confidence_tier": "HIGH",
+  "evidence": [
+    {
+      "agent": "NameMatcher",
+      "score": 0.1,
+      "weight": 0.15,
+      "reasoning": "Generic device name 'MacBook Pro'. Ambiguous, weak signal."
+    },
+    {
+      "agent": "TemporalAgent",
+      "score": 0.85,
+      "weight": 0.20,
+      "reasoning": "Joined 2 minutes before scheduled start. Consistent with candidate behavior."
+    },
+    {
+      "agent": "BehavioralAgent",
+      "score": 0.91,
+      "weight": 0.25,
+      "reasoning": "Speaking pattern shows burst responses averaging 45s, consistent with answering interview questions."
+    },
+    {
+      "agent": "SoloWindowAgent",
+      "score": 1.0,
+      "weight": 0.25,
+      "reasoning": "Was the only participant in the room for 3 minutes before interviewer joined."
+    },
+    {
+      "agent": "FaceConsistencyAgent",
+      "score": 0.78,
+      "weight": 0.10,
+      "reasoning": "Single consistent face detected throughout session. No face switching detected."
+    },
+    {
+      "agent": "LLMReasoningAgent",
+      "score": 0.88,
+      "weight": 0.05,
+      "reasoning": "Transcript analysis: participant answers questions, uses first-person context about job application. Interviewer speech pattern absent."
+    }
+  ],
+  "arbitrator_explanation": "Despite an unrecognized display name, this participant exhibits strong candidate behavioral signals: solo early join, burst speaking pattern, and consistent face. Confidence is HIGH.",
+  "updated_at": "2024-01-15T10:23:45Z"
+}
+```
+
+---
+
+## Agent Details
+
+### NameMatcher Agent
+
+Matches display names against the candidate name and email prefix using RapidFuzz token-sort ratio. Handles typos, nicknames, and partial matches. Flags generic device names — "MacBook Pro", "iPhone", "Guest", "Zoom User" — as ambiguous with a fixed low score. Detects interviewer names as a strong negative signal.
+
+### Temporal Agent
+
+Scores join time relative to the scheduled start using a Gaussian peak at exactly `T=0` with a `[-5, +3]` minute window. Candidates who join right on time receive the highest score; early or late joins decay smoothly; joins outside the window score zero.
+
+### Behavioral Agent
+
+Analyzes speaking patterns from transcript utterances and second-by-second speaking activity. Computes average utterance duration, turn frequency, and silence ratio. Candidates speak in longer bursts with thinking-time gaps between turns; interviewers speak more uniformly and frequently.
+
+### SoloWindow Agent
+
+Detects periods where exactly one participant is present in the room. The longer the solo window, the stronger the candidate signal. If no solo window exists for any participant, the agent returns no signal and its weight is redistributed.
+
+### FaceConsistency Agent
+
+Samples webcam frames every two seconds and runs MediaPipe Face Detection. Tracks whether a single consistent face remains present throughout the session. Flags multiple faces, extended absence, and face switching — but does not match against any external identity database.
+
+### LLM Reasoning Agent
+
+Feeds structured participant summaries and recent transcript excerpts to Claude via API. Asks for a participant recommendation, confidence score, and reasoning. Parses the structured JSON response and acts as a sanity-check layer. Rate-limited to once per 60 seconds to control API costs.
+
+---
+
+## Evaluation & Metrics
+
+The evaluation framework runs all seven scenarios and measures:
+
+| Metric | Target |
+|--------|--------|
+| Identification Accuracy | ≥ 6/7 scenarios |
+| Time-to-Correct-ID (happy path) | < 120 seconds |
+| Confidence at ID Point (happy path) | ≥ 0.85 |
+| False Positive Rate | 0% |
+| Uncertainty Flag Rate | ≥ 1 (ambiguous scenarios) |
+
+Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from session start — and compared against ground truth labels.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| Language | Python 3.11 | Ecosystem, readability, rapid prototyping |
+| API | FastAPI | Async-native, auto-generated OpenAPI docs, familiar |
+| Agent Orchestration | Custom Python | Simpler, more inspectable than framework solutions |
+| Fuzzy Matching | RapidFuzz | Fast, accurate token-sort ratio |
+| Face Detection | MediaPipe | Lightweight, CPU-only, no GPU dependency |
+| LLM | Claude (Anthropic API) | Best reasoning quality for edge-case synthesis |
+| Frontend | React + TypeScript | Live updates, type safety, component ecosystem |
+| Testing | pytest | Unit, integration, and end-to-end coverage |
+| Simulator | Custom Python + asyncio | Real-time event scheduling with speed control |
+
+---
+
 ## Core Documents
 
-- PRD: [docs/PRD.md](/Users/purvansh/Desktop/Projects/Lynx/docs/PRD.md)
-- Architecture notes: [docs/ARCHITECTURE.md](/Users/purvansh/Desktop/Projects/Lynx/docs/ARCHITECTURE.md)
-- API notes: [docs/API.md](/Users/purvansh/Desktop/Projects/Lynx/docs/API.md)
+- **PRD** — Full product requirements: `docs/PRD.md`
+- **Architecture** — Design decisions and data flow: `docs/ARCHITECTURE.md`
+- **API** — Endpoint contracts and examples: `docs/API.md`
 
-## Development Notes
+---
 
-- The backend uses log-odds linear pooling rather than naive multiplicative blending.
-- Agents may return `None` when a signal is globally inactive, and the arbitrator redistributes weights accordingly.
-- The simulator and dashboard are intentionally evolving alongside the backend rather than after it.
-- Some future-facing hooks already exist in the models and scheduler so later phases can land without major rewrites.
+## License
 
-## Status
-
-The project is no longer just a scaffold. It now has a functioning candidate-evaluation pipeline, event ingestion flow, and simulator backbone. The remaining phases are focused on broadening realism, product polish, and PRD completeness rather than inventing the system from scratch.
+MIT License — see `LICENSE` for details.
