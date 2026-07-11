@@ -3,6 +3,49 @@
   "scheduled_start_time": "2024-01-15T10:00:00Z",
   "candidate": {
     "participant_id": "p_001",
-    "display_name": "Rahul Sharma"
-  }
+    "display_name": "Rahul Sharma",
+    "join_offset_seconds": -120,
+    "webcam_on": true,
+    "speaking_pattern": "burst",
+    "expected_speaking_duration": 1800
+  },
+  "interviewers": [
+    {
+      "participant_id": "p_002",
+      "display_name": "Alice Chen",
+      "join_offset_seconds": 0,
+      "webcam_on": true,
+      "speaking_pattern": "uniform",
+      "expected_speaking_duration": 900
+    }
+  ],
+  "observers": [],
+  "transcript": [
+    {
+      "offset_seconds": 60,
+      "speaker_id": "p_002",
+      "utterance": "Hi Rahul, thanks for joining. Can you introduce yourself?",
+      "duration_seconds": 5
+    },
+    {
+      "offset_seconds": 70,
+      "speaker_id": "p_001",
+      "utterance": "Sure, I'm Rahul Sharma, a software engineer with three years of backend and platform experience.",
+      "duration_seconds": 45
+    },
+    {
+      "offset_seconds": 130,
+      "speaker_id": "p_002",
+      "utterance": "Great. Tell me about a challenging project you worked on.",
+      "duration_seconds": 4
+    },
+    {
+      "offset_seconds": 140,
+      "speaker_id": "p_001",
+      "utterance": "At my last company, I led the migration of a monolith to microservices while improving deployment safety and observability.",
+      "duration_seconds": 60
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "Happy path: exact candidate name, early join, strong solo window, and burst-style responses should all align on p_001."
 }

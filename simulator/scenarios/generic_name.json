@@ -3,6 +3,49 @@
   "scheduled_start_time": "2024-01-15T10:00:00Z",
   "candidate": {
     "participant_id": "p_001",
-    "display_name": "MacBook Pro"
-  }
+    "display_name": "MacBook Pro",
+    "join_offset_seconds": -90,
+    "webcam_on": true,
+    "speaking_pattern": "burst",
+    "expected_speaking_duration": 1500
+  },
+  "interviewers": [
+    {
+      "participant_id": "p_002",
+      "display_name": "Alice Chen",
+      "join_offset_seconds": 0,
+      "webcam_on": true,
+      "speaking_pattern": "uniform",
+      "expected_speaking_duration": 780
+    }
+  ],
+  "observers": [],
+  "transcript": [
+    {
+      "offset_seconds": 45,
+      "speaker_id": "p_002",
+      "utterance": "Thanks for joining. Could you walk me through your recent work?",
+      "duration_seconds": 5
+    },
+    {
+      "offset_seconds": 55,
+      "speaker_id": "p_001",
+      "utterance": "Absolutely. I recently built automation for release pipelines and observability for customer-facing services.",
+      "duration_seconds": 42
+    },
+    {
+      "offset_seconds": 120,
+      "speaker_id": "p_002",
+      "utterance": "How did you measure the impact of that effort?",
+      "duration_seconds": 4
+    },
+    {
+      "offset_seconds": 130,
+      "speaker_id": "p_001",
+      "utterance": "We reduced deployment rollback rates and improved mean time to recovery by instrumenting the critical path end to end.",
+      "duration_seconds": 48
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "Generic device-style display name weakens NameMatcher, so temporal, behavioral, and solo-window evidence must carry the decision."
 }
