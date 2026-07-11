@@ -1,5 +1,55 @@
 {
   "scenario_id": "name_change",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "candidate_name_changes": true
+  "candidate": {
+    "participant_id": "p_001",
+    "display_name": "iPhone",
+    "join_offset_seconds": -90,
+    "webcam_on": true,
+    "speaking_pattern": "burst",
+    "expected_speaking_duration": 1500
+  },
+  "interviewers": [
+    {
+      "participant_id": "p_002",
+      "display_name": "Alice Chen",
+      "join_offset_seconds": 0,
+      "webcam_on": true,
+      "speaking_pattern": "uniform",
+      "expected_speaking_duration": 900
+    }
+  ],
+  "name_change": {
+    "offset_seconds": 300,
+    "participant_id": "p_001",
+    "new_name": "Rahul Sharma"
+  },
+  "transcript": [
+    {
+      "offset_seconds": 75,
+      "speaker_id": "p_002",
+      "utterance": "Could you introduce yourself and tell us about your current role?",
+      "duration_seconds": 5
+    },
+    {
+      "offset_seconds": 86,
+      "speaker_id": "p_001",
+      "utterance": "Absolutely. I work on platform reliability and backend automation for engineering teams.",
+      "duration_seconds": 38
+    },
+    {
+      "offset_seconds": 325,
+      "speaker_id": "p_002",
+      "utterance": "Thanks Rahul, let's talk about your migration work.",
+      "duration_seconds": 4
+    },
+    {
+      "offset_seconds": 336,
+      "speaker_id": "p_001",
+      "utterance": "I focused on improving deployment safety by building better observability and release controls.",
+      "duration_seconds": 50
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "The candidate starts with a generic mobile-device display name and later changes to their real name, which should increase NameMatcher confidence mid-session."
 }

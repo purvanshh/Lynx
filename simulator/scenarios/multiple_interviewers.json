@@ -1,5 +1,88 @@
 {
   "scenario_id": "multiple_interviewers",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "participants": 4
+  "events": [
+    {
+      "offset_seconds": -120,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_001",
+        "display_name": "Rahul Sharma",
+        "webcam_on": true,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 0,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_002",
+        "display_name": "Alice Chen",
+        "webcam_on": true,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 15,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_003",
+        "display_name": "Marcus Lee",
+        "webcam_on": true,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 210,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_004",
+        "display_name": "Priya Nair",
+        "webcam_on": false,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 60,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_002",
+        "utterance": "Rahul, thanks for joining. Let's begin with your background.",
+        "duration_seconds": 5,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 72,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_001",
+        "utterance": "Thanks, Alice. I've spent the last four years building backend systems for internal developer platforms.",
+        "duration_seconds": 40,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 140,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_003",
+        "utterance": "Can you describe a migration you owned end to end?",
+        "duration_seconds": 5,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 150,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_001",
+        "utterance": "I led a service decomposition effort where we split critical dependencies, added tracing, and reduced release risk.",
+        "duration_seconds": 55,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "Two interviewers and a late observer add crowd noise, but p_001 should remain the strongest candidate through early join and burst-style responses."
 }
