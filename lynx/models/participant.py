@@ -1,6 +1,12 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class WebcamFrame(BaseModel):
+    captured_at: datetime | None = None
+    face_count: int | None = None
+    image_path: str | None = None
 
 
 class Participant(BaseModel):
@@ -9,4 +15,5 @@ class Participant(BaseModel):
     join_timestamp: datetime | None = None
     leave_timestamp: datetime | None = None
     webcam_on: bool = False
+    webcam_frames: list[WebcamFrame] = Field(default_factory=list)
     speaking_duration_total: float = 0.0
