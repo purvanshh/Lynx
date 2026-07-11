@@ -6,14 +6,24 @@ from lynx.models.session import SessionState
 
 @dataclass(slots=True)
 class AgentResult:
+    agent: str
     participant_id: str
     score: float | None
+    weight: float
     reasoning: str
 
 
 class BaseAgent(ABC):
-    name: str
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def weight(self) -> float:
+        raise NotImplementedError
 
     @abstractmethod
-    def evaluate(self, session: SessionState) -> list[AgentResult]:
+    def evaluate(self, session: SessionState, participant_id: str) -> AgentResult | None:
         raise NotImplementedError

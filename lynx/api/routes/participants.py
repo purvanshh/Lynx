@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from lynx.api.dependencies import get_store
-from lynx.arbitrator.confidence import confidence_tier
+from lynx.api.dependencies import get_orchestrator, get_store
+from lynx.models.evidence import ArbitratorOutput
+from lynx.orchestrator import AgentOrchestrator
 from lynx.store.memory_store import InMemorySessionStore
 
 router = APIRouter(prefix="/sessions", tags=["participants"])
@@ -22,6 +23,7 @@ def get_participants(
 def get_candidate(
     session_id: str,
     store: InMemorySessionStore = Depends(get_store),
+    orchestrator: AgentOrchestrator = Depends(get_orchestrator),
 ) -> dict[str, str | float]:
     session = store.get(session_id)
     if session is None:
@@ -30,15 +32,12 @@ def get_candidate(
     if not session.participants:
         raise HTTPException(status_code=400, detail="No participants in session")
 
-    probabilities = session.prior_probabilities or {
-        participant.participant_id: 1.0 / len(session.participants)
-        for participant in session.participants
-    }
-    candidate_id = max(probabilities, key=probabilities.get)
-    candidate_probability = probabilities[candidate_id]
+    output: ArbitratorOutput = orchestrator.evaluate(session)
+    if output.top_candidate_id is None:
+        raise HTTPException(status_code=400, detail="No candidate probabilities available")
 
     return {
-        "participant_id": candidate_id,
-        "candidate_probability": candidate_probability,
-        "confidence_tier": confidence_tier(candidate_probability),
+        "participant_id": output.top_candidate_id,
+        "candidate_probability": output.top_candidate_probability,
+        "confidence_tier": output.confidence_tier,
     }

@@ -9,5 +9,5 @@ def test_name_matcher_returns_scores() -> None:
         candidate_name="Rahul Sharma",
         participants=[Participant(participant_id="p1", display_name="Rahul Sharma")],
     )
-    results = NameMatcherAgent().evaluate(session)
-    assert results[0].score is not None
+    result = NameMatcherAgent().evaluate(session, "p1")
+    assert result.score is not None
