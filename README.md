@@ -75,13 +75,13 @@ The simulator loads scenario configurations and emits timed events in real time,
 
 Seven predefined scenarios cover the full edge-case matrix:
 
-1. **Happy Path** — Candidate joins with correct name, webcam on, solo window
-2. **Generic Device Name** — Candidate appears as "MacBook Pro" or "iPhone"
-3. **Multiple Interviewers + Observers** — Distinguishing candidate from a crowded room
-4. **Name Change Mid-Session** — Candidate updates display name after joining
-5. **Interviewer Enters Candidate Name** — An interviewer accidentally uses the candidate's display name
-6. **No Solo Window** — Everyone joins simultaneously; the strongest signal is absent
-7. **Webcam Off Throughout** — No face consistency signal available
+1. **Happy Path** — Candidate joins with correct name, webcam on, and a strong solo window
+2. **Generic Device Name** — Candidate appears as "MacBook Pro", forcing non-name evidence to carry
+3. **Multiple Interviewers + Observers** — Distinguishing the candidate from a crowded room
+4. **Name Change Mid-Session** — Candidate updates display name after joining, triggering a confidence shift
+5. **Interviewer Enters Candidate Name** — An interviewer shares the candidate's display name, testing false-positive resistance
+6. **No Solo Window** — Everyone joins simultaneously, so SoloWindowAgent should drop out and redistribute weight
+7. **Webcam Off Throughout** — No face-consistency signal is available, so the remaining agents must carry
 
 Each scenario includes complete participant arrays, speaking patterns, transcript streams, join offsets, and ground truth labels for automated evaluation.
 

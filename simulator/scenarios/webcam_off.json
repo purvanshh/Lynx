@@ -1,5 +1,44 @@
 {
   "scenario_id": "webcam_off",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "all_webcams_off": true
+  "candidate": {
+    "participant_id": "p_001",
+    "display_name": "Rahul Sharma",
+    "join_offset_seconds": -120,
+    "webcam_on": false,
+    "speaking_pattern": "burst",
+    "expected_speaking_duration": 1500
+  },
+  "interviewers": [
+    {
+      "participant_id": "p_002",
+      "display_name": "Alice Chen",
+      "join_offset_seconds": 0,
+      "webcam_on": false,
+      "speaking_pattern": "uniform",
+      "expected_speaking_duration": 900
+    }
+  ],
+  "transcript": [
+    {
+      "offset_seconds": 60,
+      "speaker_id": "p_002",
+      "utterance": "Thanks for joining, Rahul. Could you start with your recent projects?",
+      "duration_seconds": 5
+    },
+    {
+      "offset_seconds": 72,
+      "speaker_id": "p_001",
+      "utterance": "I recently led reliability improvements across a set of internal platform services.",
+      "duration_seconds": 43
+    },
+    {
+      "offset_seconds": 145,
+      "speaker_id": "p_001",
+      "utterance": "That work included release safeguards, telemetry, and response playbooks for critical systems.",
+      "duration_seconds": 51
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "All webcams are off, so FaceConsistencyAgent should be globally inactive and the remaining agents must still identify p_001."
 }

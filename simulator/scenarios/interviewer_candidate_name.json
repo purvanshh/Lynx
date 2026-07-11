@@ -1,5 +1,68 @@
 {
   "scenario_id": "interviewer_candidate_name",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "false_positive_risk": true
+  "events": [
+    {
+      "offset_seconds": -120,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_001",
+        "display_name": "Rahul Sharma",
+        "webcam_on": true,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 0,
+      "event_type": "participant_join",
+      "payload": {
+        "participant_id": "p_002",
+        "display_name": "Rahul Sharma",
+        "webcam_on": true,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 50,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_002",
+        "utterance": "Thanks Rahul, let's start with your recent backend work.",
+        "duration_seconds": 5,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 62,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_001",
+        "utterance": "Sure. I've been focused on observability and platform tooling for developer productivity.",
+        "duration_seconds": 44,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 130,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_002",
+        "utterance": "How did you approach release safety in that project?",
+        "duration_seconds": 4,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    },
+    {
+      "offset_seconds": 142,
+      "event_type": "transcript",
+      "payload": {
+        "participant_id": "p_001",
+        "utterance": "We built automated rollback controls and service-level telemetry so changes could be safely observed and reversed.",
+        "duration_seconds": 52,
+        "scheduled_start_time": "2024-01-15T10:00:00Z"
+      }
+    }
+  ],
+  "ground_truth_candidate_id": "p_001",
+  "ground_truth_notes": "Both p_001 and p_002 share the candidate name, so temporal and behavioral evidence must disambiguate and avoid a false positive."
 }
