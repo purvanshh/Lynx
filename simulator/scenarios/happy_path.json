@@ -1,0 +1,8 @@
+{
+  "scenario_id": "happy_path",
+  "scheduled_start_time": "2024-01-15T10:00:00Z",
+  "candidate": {
+    "participant_id": "p_001",
+    "display_name": "Rahul Sharma"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "scenario_id": "no_solo_window",
+  "scheduled_start_time": "2024-01-15T10:00:00Z",
+  "simultaneous_join": true
+}

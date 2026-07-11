@@ -1,39 +1,32 @@
-# Sherlock Candidate Identification System
+# Lynx Candidate Identification System
 
-Sherlock is a real-time, multi-agent candidate identification system for interview calls. It is designed to identify the most likely candidate among meeting participants using evidence fusion across multiple signals, while keeping the reasoning explainable and uncertainty visible.
+Lynx is a real-time, multi-agent system for identifying the likely interview candidate in a live meeting. The product combines multiple weak signals, fuses them with a log-odds Bayesian arbitrator, and returns both a confidence score and an explanation trail.
 
-This repository is intentionally starting with documentation only. The Bayesian fusion math and implementation details will be refined later.
+This repo now contains the initial product docs plus a full boilerplate scaffold for the backend, simulator, dashboard, tests, and scripts. Most modules are intentionally placeholder-first so the architecture is in place before deeper implementation work.
 
 ## Current Status
 
-- Documentation-first scaffold
-- PRD captured in Markdown
-- No code or implementation added yet
+- Updated PRD with the corrected log-odds arbitrator specification
+- Full repo structure scaffolded
+- Minimal FastAPI, simulator, dashboard, and test boilerplate in place
+- Agent implementations are stubs and should be refined iteratively
 
-## Proposed Repository Structure
+## Core Documents
+
+- PRD: [docs/PRD.md](/Users/purvansh/Desktop/Projects/Lynx/docs/PRD.md)
+- Architecture notes: [docs/ARCHITECTURE.md](/Users/purvansh/Desktop/Projects/Lynx/docs/ARCHITECTURE.md)
+- API notes: [docs/API.md](/Users/purvansh/Desktop/Projects/Lynx/docs/API.md)
+
+## Repository Structure
 
 ```text
 lynx/
-├── README.md
-└── docs/
-    └── PRD.md
-```
-
-## Planned Structure
-
-The fuller target structure from the current PRD is expected to evolve into:
-
-```text
-sherlock-candidate-id/
 ├── README.md
 ├── requirements.txt
 ├── pyproject.toml
 ├── .env.example
 ├── docs/
-│   ├── PRD.md
-│   ├── ARCHITECTURE.md
-│   └── API.md
-├── sherlock/
+├── lynx/
 ├── simulator/
 ├── dashboard/
 ├── tests/
@@ -41,6 +34,33 @@ sherlock-candidate-id/
 └── .github/
 ```
 
-## PRD
+## Quick Start
 
-The working product requirements document is available at [docs/PRD.md](/Users/purvansh/Desktop/Projects/Lynx/docs/PRD.md).
+### Backend
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn lynx.api.main:app --reload
+```
+
+### Dashboard
+
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+### Tests
+
+```bash
+pytest
+```
+
+## Notes
+
+- The arbitrator scaffold follows the updated PRD's log-odds linear pooling approach.
+- The current dashboard is a static shell wired for future API integration.
+- Scenario JSON files and test fixtures are placeholders to make the structure concrete.

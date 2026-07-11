@@ -1,0 +1,5 @@
+{
+  "scenario_id": "name_change",
+  "scheduled_start_time": "2024-01-15T10:00:00Z",
+  "candidate_name_changes": true
+}

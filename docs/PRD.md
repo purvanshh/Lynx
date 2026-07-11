@@ -1,10 +1,10 @@
-# Sherlock Candidate Identification System — Professional PRD
+# Lynx Candidate Identification System — Professional PRD
 
 ---
 
 ## 1. Executive Summary
 
-**Sherlock** is a real-time, multi-agent Bayesian fusion system that automatically identifies the interview candidate from a pool of video conference participants. It continuously evaluates evidence across six independent signal agents, fuses them through a weighted Bayesian arbitrator, and produces explainable confidence scores with natural language reasoning.
+**Lynx** is a real-time, multi-agent Bayesian fusion system that automatically identifies the interview candidate from a pool of video conference participants. It continuously evaluates evidence across six independent signal agents, fuses them through a weighted Bayesian arbitrator, and produces explainable confidence scores with natural language reasoning.
 
 **Key Differentiator:** Not face recognition. Not audio fingerprinting. The edge is the **multi-agent evidence fusion architecture** and the **explainability layer** — every identification comes with a human-readable audit trail.
 
@@ -12,7 +12,7 @@
 
 ## 2. Problem Statement
 
-During live interviews on Google Meet, Teams, or Zoom, Sherlock's fraud detection pipeline needs to analyze only the candidate's video/audio streams. Today, candidate identification is manual and error-prone. The system must:
+During live interviews on Google Meet, Teams, or Zoom, Lynx's fraud detection pipeline needs to analyze only the candidate's video/audio streams. Today, candidate identification is manual and error-prone. The system must:
 
 - Automatically identify the correct participant with high confidence
 - Continuously update confidence as new evidence arrives
@@ -271,25 +271,42 @@ Per participant, continuously updated:
 
 ### 6.1 Fusion Pattern
 
-**Weighted Bayesian fusion with dynamic weight redistribution.**
+**Log-odds linear pooling with prior retention.**
 
 ### 6.2 Algorithm
 
-```text
-posterior[p] = prior[p]  // uniform prior or previous posterior
+Each agent produces a probability score. The arbitrator converts these to log-odds, computes a weighted average against the current prior, and converts back to probability space. This preserves evidence accumulation, handles missing agents gracefully, and avoids the score-collapse problem of naive multiplicative blending.
 
-for each agent_result:
-    if agent produced score for participant p:
-        posterior[p] *= (weight * score + (1 - weight) * prior[p])
+**Per update cycle, for each participant `p`:**
 
-normalize across all participants so sum = 1.0
+#### Step 1: Determine Active Agents
+
+An agent is active for participant `p` if it produced a score for `p` in this cycle.
+
+#### Step 2: Global Weight Redistribution
+
+If any agent produced no scores for any participant, its weight is redistributed proportionally among the remaining globally active agents.
+
+#### Step 3: Compute Log-Odds
+
+```python
+epsilon = 1e-6
+
+def log_odds(score: float) -> float:
+    score = clamp(score, epsilon, 1 - epsilon)
+    return log(score / (1 - score))
+
+lo_prior(p) = log_odds(prior_probability[p])
+
+for each active agent a:
+    lo_a(p) = log_odds(agent_score[a][p])
 ```
 
 ### 6.3 Weight Redistribution
 
-If an agent produces no signal (e.g., `SoloWindowAgent` fires for no one, or `FaceConsistencyAgent` disabled because all webcams are off), its weight is redistributed proportionally across other active agents.
+All participants share the same redistributed global weight basis so cross-participant comparisons remain valid.
 
-**Example:** If `SoloWindowAgent` (0.25) is inactive, weights become:
+**Example:** If `SoloWindowAgent` (0.25) is globally inactive, weights become:
 
 - NameMatcher: 0.15 -> 0.20
 - TemporalAgent: 0.20 -> 0.267
@@ -297,10 +314,121 @@ If an agent produces no signal (e.g., `SoloWindowAgent` fires for no one, or `Fa
 - FaceConsistencyAgent: 0.10 -> 0.133
 - LLMReasoningAgent: 0.05 -> 0.067
 
-### 6.4 Update Frequency
+### 6.4 Weighted Posterior Log-Odds
+
+```python
+W_active(p) = sum(weights[a] for a in active_agents_for_p)
+
+lo_posterior(p) = (1 - W_active(p)) * lo_prior(p)
+                + sum(weights[a] * lo_a(p) for a in active_agents_for_p)
+```
+
+Interpretation:
+
+- `(1 - W_active)` is the prior retention factor
+- If all agents are active, the prior is fully replaced by weighted agent opinions
+- If only some agents are active for a participant, the remaining mass stays with the prior
+
+### 6.5 Convert to Odds and Normalize
+
+```python
+odds_p = exp(lo_posterior(p))
+posterior_p = odds_p / sum(odds_q for all q)
+```
+
+This enforces the exactly-one-candidate assumption across participants.
+
+### 6.6 Full Pseudocode
+
+```python
+def update_participants(participants, agent_results, base_weights, prior_probs):
+    epsilon = 1e-6
+
+    globally_active = {
+        name
+        for name, scores in agent_results.items()
+        if any(score is not None for score in scores.values())
+    }
+
+    if not globally_active:
+        return prior_probs
+
+    total_active = sum(base_weights[name] for name in globally_active)
+    normalized_weights = {
+        name: base_weights[name] / total_active
+        for name in globally_active
+    }
+
+    def lo(probability):
+        clamped = max(epsilon, min(1 - epsilon, probability))
+        return math.log(clamped / (1 - clamped))
+
+    odds = {}
+    default_prior = 1.0 / len(participants)
+
+    for participant_id in participants:
+        prior = prior_probs.get(participant_id, default_prior)
+        prior = max(epsilon, min(1 - epsilon, prior))
+        lo_prior = lo(prior)
+
+        weighted_lo_sum = 0.0
+        weight_sum = 0.0
+
+        for agent_name, scores in agent_results.items():
+            if agent_name not in globally_active:
+                continue
+
+            score = scores.get(participant_id)
+            if score is None:
+                continue
+
+            weight = normalized_weights[agent_name]
+            weighted_lo_sum += weight * lo(score)
+            weight_sum += weight
+
+        lo_post = (1 - weight_sum) * lo_prior + weighted_lo_sum
+        odds[participant_id] = math.exp(lo_post)
+
+    total_odds = sum(odds.values())
+    return {
+        participant_id: odds[participant_id] / total_odds
+        for participant_id in participants
+    }
+```
+
+### 6.7 Key Properties
+
+| Property | Behavior |
+|----------|----------|
+| **Score collapse immunity** | Log-odds space avoids the multiplicative collapse problem |
+| **Missing-agent grace** | Silent agents are skipped and prior retention compensates |
+| **Evidence accumulation** | Posterior from cycle `t` becomes prior for cycle `t+1` |
+| **Extreme-score stability** | Clamping prevents `log(0)` and infinite odds |
+| **Multi-class correctness** | Odds normalization keeps probabilities across participants summing to 1 |
+
+### 6.8 Update Frequency
 
 - **Periodic:** Every 30 seconds during live session
 - **Event-driven:** Immediately on any participant event (join, leave, name change, webcam toggle)
+
+### 6.9 Confidence Tiers
+
+| Tier | Probability Range | Behavior |
+|------|-------------------|----------|
+| `HIGH` | ≥ 0.85 | Confidently identify as candidate |
+| `MEDIUM` | 0.65 - 0.84 | Likely candidate, continue monitoring |
+| `LOW` | 0.45 - 0.64 | Weak signal, do not commit |
+| `UNCERTAIN` | < 0.45 | Surface ambiguity, flag for human review |
+
+### 6.10 Why This Replaces the Old Pseudocode
+
+The previous multiplicative update:
+
+```python
+posterior[p] *= (weight * score + (1 - weight) * prior[p])
+```
+
+causes score collapse as more agents fire and does not provide a clean multi-class normalization story. The log-odds formulation is more standard, more numerically stable, and easier to explain in terms of each agent's weighted contribution.
 
 ---
 
@@ -487,7 +615,7 @@ Since the prototype does not integrate with real meeting APIs, the simulator mus
 ## 13. Repo Structure
 
 ```text
-sherlock-candidate-id/
+lynx-candidate-id/
 ├── README.md                          # Project overview, setup, run instructions
 ├── requirements.txt                   # Python dependencies
 ├── pyproject.toml                     # Modern Python packaging
@@ -498,7 +626,7 @@ sherlock-candidate-id/
 │   ├── ARCHITECTURE.md                # Detailed architecture decisions
 │   └── API.md                         # API contract documentation
 │
-├── sherlock/                          # Main application package
+├── lynx/                              # Main application package
 │   ├── __init__.py
 │   ├── config.py                      # Settings, env vars, constants
 │   │
