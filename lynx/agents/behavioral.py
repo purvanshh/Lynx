@@ -15,6 +15,9 @@ class BehavioralAgent(BaseAgent):
         return DEFAULT_AGENT_WEIGHTS[self.name]
 
     def evaluate(self, session: SessionState, participant_id: str) -> AgentResult:
+        participant = next(
+            participant for participant in session.participants if participant.participant_id == participant_id
+        )
         utterances = [utterance for utterance in session.transcript if utterance.speaker_id == participant_id]
         if not utterances:
             return AgentResult(
@@ -39,13 +42,13 @@ class BehavioralAgent(BaseAgent):
             session_duration_seconds = 60.0
 
         turn_frequency = turn_count / (session_duration_seconds / 60.0)
-        speaking_seconds = sum(durations)
-        if speaking_seconds == 0.0:
-            participant = next(
-                participant for participant in session.participants if participant.participant_id == participant_id
-            )
-            speaking_seconds = participant.speaking_duration_total
-        silence_ratio = max(0.0, min(1.0, 1.0 - (speaking_seconds / session_duration_seconds)))
+        if participant.speaking_activity:
+            speaking_seconds = float(sum(1 for active in participant.speaking_activity if active))
+            total_activity_seconds = float(len(participant.speaking_activity))
+            silence_ratio = max(0.0, min(1.0, 1.0 - (speaking_seconds / total_activity_seconds)))
+        else:
+            speaking_seconds = sum(durations) or participant.speaking_duration_total
+            silence_ratio = max(0.0, min(1.0, 1.0 - (speaking_seconds / session_duration_seconds)))
 
         duration_score = min(1.0, avg_duration / 45.0)
         frequency_score = max(0.0, 1.0 - (turn_frequency / 8.0))

@@ -45,3 +45,16 @@ def test_temporal_agent_returns_neutral_when_timestamps_missing() -> None:
     result = TemporalAgent().evaluate(session, "p1")
 
     assert result.score == 0.5
+
+
+@pytest.mark.parametrize(
+    ("delta_minutes", "expected_score"),
+    [
+        (-5.0, 0.135),
+        (3.0, 0.487),
+    ],
+)
+def test_temporal_agent_includes_window_boundaries(delta_minutes: float, expected_score: float) -> None:
+    result = TemporalAgent().evaluate(make_session(delta_minutes), "p1")
+
+    assert result.score == pytest.approx(expected_score, abs=0.001)

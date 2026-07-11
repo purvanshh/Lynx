@@ -95,3 +95,29 @@ def test_behavioral_agent_handles_single_utterance() -> None:
     result = BehavioralAgent().evaluate(session, "p1")
 
     assert 0.0 <= result.score <= 1.0
+
+
+def test_behavioral_agent_uses_speaking_activity_for_silence_ratio() -> None:
+    start = datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc)
+    session = SessionState(
+        session_id="behavioral-activity",
+        participants=[
+            Participant(
+                participant_id="p1",
+                display_name="Candidate",
+                speaking_activity=[True, True, False, False, False, False, False, False, False, False],
+            )
+        ],
+        transcript=[
+            TranscriptUtterance(
+                speaker_id="p1",
+                utterance="Measured answer",
+                timestamp=start,
+                duration_seconds=20,
+            )
+        ],
+    )
+
+    result = BehavioralAgent().evaluate(session, "p1")
+
+    assert "silence ratio 0.80" in result.reasoning

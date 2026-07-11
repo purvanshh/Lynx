@@ -48,6 +48,18 @@ def test_name_matcher_uses_email_prefix_for_handle_style_name() -> None:
     assert result.score > 0.7
 
 
+def test_name_matcher_scores_partial_name_match_above_baseline() -> None:
+    result = NameMatcherAgent().evaluate(make_session(display_name="Rahul"), "p1")
+
+    assert result.score > 0.5
+
+
+def test_name_matcher_is_case_insensitive() -> None:
+    result = NameMatcherAgent().evaluate(make_session(display_name="rAhUl sHaRmA"), "p1")
+
+    assert result.score == 1.0
+
+
 def test_name_matcher_flags_interviewer_name_as_strong_negative() -> None:
     result = NameMatcherAgent().evaluate(
         make_session(display_name="Anita Rao", interviewer_names=["Anita Rao"]),
