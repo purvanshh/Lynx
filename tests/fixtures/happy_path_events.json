@@ -1,0 +1,44 @@
+[
+  {
+    "type": "participant_join",
+    "timestamp": "2026-07-11T08:58:00Z",
+    "participant_id": "p_001",
+    "display_name": "Rahul Sharma",
+    "webcam_on": true
+  },
+  {
+    "type": "participant_join",
+    "timestamp": "2026-07-11T09:00:00Z",
+    "participant_id": "p_002",
+    "display_name": "Alice Chen",
+    "webcam_on": true
+  },
+  {
+    "type": "transcript",
+    "timestamp": "2026-07-11T09:01:00Z",
+    "participant_id": "p_002",
+    "utterance": "Hi Rahul, thanks for joining. Can you introduce yourself?",
+    "duration_seconds": 5
+  },
+  {
+    "type": "transcript",
+    "timestamp": "2026-07-11T09:01:10Z",
+    "participant_id": "p_001",
+    "utterance": "Sure, I'm Rahul Sharma, a software engineer with three years of backend and platform experience.",
+    "duration_seconds": 45
+  },
+  {
+    "type": "transcript",
+    "timestamp": "2026-07-11T09:02:10Z",
+    "participant_id": "p_002",
+    "utterance": "Great. Tell me about a challenging project you worked on.",
+    "duration_seconds": 4
+  },
+  {
+    "type": "transcript",
+    "timestamp": "2026-07-11T09:02:20Z",
+    "participant_id": "p_001",
+    "utterance": "At my last company, I led the migration of a monolith to microservices while improving deployment safety and observability.",
+    "duration_seconds": 60
+  }
+]
