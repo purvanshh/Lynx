@@ -162,7 +162,22 @@ class LLMReasoningAgent(BaseAgent):
             payload = json.loads(response.read().decode("utf-8"))
 
         content = payload["choices"][0]["message"]["content"]
-        parsed = json.loads(content)
+        parsed = self._parse_llm_content(content)
+        return {
+            "participant_id": parsed["participant_id"],
+            "confidence": parsed["confidence"],
+            "explanation": parsed["explanation"],
+        }
+
+    def _parse_llm_content(self, content: str) -> dict[str, object]:
+        cleaned = content.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+            if len(lines) >= 3 and lines[-1].strip() == "```":
+                cleaned = "\n".join(lines[1:-1]).strip()
+                if cleaned.lower().startswith("json"):
+                    cleaned = cleaned[4:].strip()
+        parsed = json.loads(cleaned)
         return {
             "participant_id": parsed["participant_id"],
             "confidence": parsed["confidence"],

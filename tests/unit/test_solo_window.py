@@ -107,3 +107,33 @@ def test_solo_window_agent_uses_longest_window_across_rejoins() -> None:
 
     assert result is not None
     assert result.score == 1.0
+
+
+def test_solo_window_agent_handles_leave_and_rejoin_sequence() -> None:
+    start = datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc)
+    session = make_session(
+        [
+            Participant(
+                participant_id="p1",
+                display_name="Candidate",
+                join_timestamp=start,
+                leave_timestamp=start + timedelta(minutes=10),
+            ),
+            Participant(
+                participant_id="p2",
+                display_name="Interviewer",
+                join_timestamp=start + timedelta(minutes=2),
+                leave_timestamp=start + timedelta(minutes=4),
+            ),
+            Participant(
+                participant_id="p3",
+                display_name="Observer",
+                join_timestamp=start + timedelta(minutes=6),
+            ),
+        ]
+    )
+
+    result = SoloWindowAgent().evaluate(session, "p1")
+
+    assert result is not None
+    assert "120s" in result.reasoning

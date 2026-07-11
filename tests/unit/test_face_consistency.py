@@ -75,3 +75,20 @@ def test_face_consistency_agent_penalizes_multiple_faces() -> None:
 
     assert result is not None
     assert result.score < 1.0
+
+
+def test_face_consistency_agent_returns_neutral_when_counts_cannot_be_derived() -> None:
+    result = FaceConsistencyAgent().evaluate(
+        make_session(
+            Participant(
+                participant_id="p1",
+                display_name="Candidate",
+                webcam_on=True,
+                webcam_frames=[WebcamFrame(image_path="/tmp/non-existent-frame.png")],
+            )
+        ),
+        "p1",
+    )
+
+    assert result is not None
+    assert result.score == 0.5

@@ -114,3 +114,32 @@ def test_llm_reasoning_agent_handles_unknown_participant_response() -> None:
 
     assert result.score == 0.5
     assert "unknown participant" in result.reasoning.lower()
+
+
+def test_llm_reasoning_agent_parses_markdown_wrapped_json() -> None:
+    agent = LLMReasoningAgent(
+        settings=Settings(llm_api_key="test-key"),
+        now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
+    )
+
+    parsed = agent._parse_llm_content(
+        """```json
+{"participant_id":"p1","confidence":0.77,"explanation":"Wrapped response"}
+```"""
+    )
+
+    assert parsed["participant_id"] == "p1"
+    assert parsed["confidence"] == 0.77
+
+
+def test_llm_reasoning_agent_falls_back_on_malformed_json() -> None:
+    agent = LLMReasoningAgent(
+        settings=Settings(llm_api_key="test-key"),
+        now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
+        transport=lambda prompt: (_ for _ in ()).throw(ValueError("bad json")),
+    )
+
+    result = agent.evaluate(make_session(), "p1")
+
+    assert result.score == 0.5
+    assert "failed" in result.reasoning.lower()
