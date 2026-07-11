@@ -35,7 +35,10 @@ class LLMReasoningAgent(BaseAgent):
         return DEFAULT_AGENT_WEIGHTS[self.name]
 
     def evaluate(self, session: SessionState, participant_id: str) -> AgentResult:
-        if session.session_id not in self._session_cache:
+        cached_results = self._session_cache.get(session.session_id)
+        if cached_results is None or set(cached_results) != {
+            participant.participant_id for participant in session.participants
+        }:
             self._session_cache[session.session_id] = self._evaluate_session(session)
         return self._session_cache[session.session_id][participant_id]
 
