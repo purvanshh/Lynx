@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from lynx.api.dependencies import get_orchestrator, get_store
 from lynx.api.schemas import CreateSessionRequest, EventRequest
+from lynx.api.ws_manager import ws_manager
+from lynx.models.evidence import ArbitratorOutput
 from lynx.models.participant import Participant, WebcamFrame
 from lynx.models.session import ConfidenceHistoryEntry, SessionEventEntry, SessionState
 from lynx.models.transcript import TranscriptUtterance
@@ -56,7 +58,7 @@ def get_session(
 
 
 @router.post("/{session_id}/events")
-def inject_event(
+async def inject_event(
     session_id: str,
     event: EventRequest,
     store: InMemorySessionStore = Depends(get_store),
@@ -162,6 +164,7 @@ def inject_event(
             details=details,
         )
     )
+    output: ArbitratorOutput | None = None
     if session.participants:
         output = orchestrator.evaluate(session)
         session.prior_probabilities = output.candidate_probabilities
@@ -172,6 +175,29 @@ def inject_event(
             )
         )
     store.update(session)
+
+    if output is not None:
+        await ws_manager.broadcast(
+            session_id,
+            {
+                "type": "candidate_update",
+                "session_id": session_id,
+                "data": {
+                    "participant_id": output.top_candidate_id,
+                    "candidate_probability": output.top_candidate_probability,
+                    "confidence_tier": output.confidence_tier,
+                    "is_candidate": output.confidence_tier in {"HIGH", "MEDIUM"},
+                    "candidate_probabilities": output.candidate_probabilities,
+                    "evidence": {
+                        pid: [item.model_dump(mode="json") for item in items]
+                        for pid, items in output.evidence.items()
+                    },
+                    "arbitrator_explanation": output.arbitrator_explanation,
+                    "updated_at": output.updated_at.isoformat(),
+                },
+            },
+        )
+
     return {"status": "processed", "event_type": event.type}
 
 
