@@ -27,7 +27,7 @@ Lynx runs six independent signal agents against every participant in a session:
 | **Behavioral** | Speaking pattern analysis — burst responses vs. uniform interviewer turns | 0.25 |
 | **SoloWindow** | Detection of solo presence before others join — a near-certain candidate signal | 0.25 |
 | **FaceConsistency** | Intra-session face consistency via MediaPipe — single face, no switching | 0.10 |
-| **LLMReasoning** | Cross-signal synthesis and edge-case reasoning via Claude | 0.05 |
+| **LLMReasoning** | Cross-signal synthesis and edge-case reasoning via GPT-4o-mini | 0.05 |
 
 Each agent returns a probability score and a natural language reasoning string. The system handles missing signals gracefully: if an agent cannot produce a score for any participant — for example, when no solo window exists or all webcams are off — its weight is automatically redistributed across the remaining active agents.
 
@@ -40,7 +40,7 @@ The central arbitrator fuses agent opinions using log-odds linear pooling with p
 - Converts back to odds and normalizes across all participants
 - Iterates: the posterior from one cycle becomes the prior for the next
 
-Update cycles trigger every 30 seconds and immediately on any participant event — joins, leaves, name changes, or webcam toggles.
+Update cycles fire immediately on any participant event and on a 30-second periodic heartbeat. Results are pushed to connected WebSocket clients in real time.
 
 ### Confidence Tiers & Uncertainty Handling
 
@@ -65,9 +65,10 @@ Lynx exposes a complete FastAPI surface for session lifecycle and live evaluatio
 - `POST /sessions/{id}/events` — Inject live events: participant joins, leaves, name changes, transcript utterances, speaking activity, webcam frames
 - `GET /sessions/{id}/candidate` — Get the current top candidate with full evidence array, confidence tier, and arbitrator explanation
 - `GET /sessions/{id}/confidence-history` — Time-series of probability evolution per participant
+- `WS /sessions/{id}/ws` — Stream real-time candidate updates and heartbeat messages
 - `GET /health` — Service health check
 
-Event injection triggers an immediate re-evaluation pipeline: orchestrator → agents → arbitrator → updated confidence store.
+Event injection and a background 30-second heartbeat both trigger re-evaluation: orchestrator → agents → arbitrator → updated confidence store. Results are broadcast to all WebSocket clients connected to the session.
 
 ### Mock Meeting Simulator
 
@@ -107,7 +108,7 @@ The React dashboard provides a real-time operational view of any active session:
 - **Session Timeline** — Chronological visualization of joins, leaves, speaking events, and transcript utterances
 - **Uncertainty Banner** — Dynamic alert when confidence drops to UNCERTAIN, surfacing the top two candidates and recommending human review
 
-The dashboard polls the API every five seconds and maintains a live view of confidence evolution.
+The dashboard polls the API every five seconds and optionally connects via WebSocket for push-based real-time updates.
 
 ---
 
@@ -157,11 +158,12 @@ The dashboard polls the API every five seconds and maintains a live view of conf
          │
          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    REST API (FastAPI)                         │
+│                    REST API + WebSocket (FastAPI)              │
 │         • Session management                                  │
 │         • Event ingestion                                     │
 │         • Candidate evaluation                                │
 │         • Confidence history                                  │
+│         • Real-time push via /sessions/{id}/ws                │
 └─────────────────────────────────────────────────────────────┘
          │
          ▼
@@ -181,6 +183,7 @@ Key architectural decisions:
 - **MediaPipe face detection** — Lightweight, CPU-only, no GPU dependency
 - **RapidFuzz** — Fast token-sort ratio for name matching with typo and nickname tolerance
 - **In-memory store with JSON persistence** — Sufficient for prototype scope; Redis-ready for production scale
+- **WebSocket push** — Real-time candidate updates and 30-second heartbeat broadcast to connected clients
 
 ---
 
@@ -196,7 +199,13 @@ lynx/
 │   │   ├── solo_window.py
 │   │   ├── face_consistency.py
 │   │   └── llm_reasoning.py
-│   ├── api/                       # FastAPI routes and schemas
+│   ├── api/                       # FastAPI routes, schemas, WebSocket
+│   │   ├── ws_manager.py          # WebSocket connection manager
+│   │   └── routes/
+│   │       ├── sessions.py        # Session CRUD + event injection
+│   │       ├── participants.py    # Participant + candidate endpoints
+│   │       ├── ws.py              # WebSocket live stream endpoint
+│   │       └── health.py          # Health check
 │   ├── arbitrator/                # Log-odds fusion engine
 │   ├── models/                    # Pydantic domain models
 │   ├── store/                     # Session storage layer
@@ -256,13 +265,13 @@ lynx/
 
 - Python 3.11+
 - Node.js 18+ (for dashboard)
-- An Anthropic API key (for LLMReasoningAgent)
+- An OpenAI-compatible API key (optional, for LLMReasoningAgent)
 
 ### Environment Setup
 
 ```bash
 cp .env.example .env
-# Edit .env and add your LYNX_LLM_API_KEY
+# Edit .env and add your LYNX_LLM_API_KEY if using the LLM agent
 ```
 
 ### Run the Backend
@@ -309,6 +318,24 @@ pytest
 ```
 
 The test suite covers all six agents, the log-odds arbitrator, weight redistribution, the event scheduler, and end-to-end API flows.
+
+---
+
+### WebSocket Live Stream
+
+Connect to a session's WebSocket endpoint to receive push updates:
+
+```bash
+# Requires a WebSocket client like websocat or wscat
+wscat -c ws://localhost:8000/sessions/{session_id}/ws
+```
+
+Messages arrive as JSON with a `type` field:
+
+- `candidate_update` — sent immediately after every event injection
+- `heartbeat_update` — sent every 30 seconds by the background heartbeat task
+
+Both contain a `data` field with the same structure as the `/candidate` endpoint response.
 
 ---
 
@@ -424,7 +451,7 @@ Samples webcam frames every two seconds and runs MediaPipe Face Detection. Track
 
 ### LLM Reasoning Agent
 
-Feeds structured participant summaries and recent transcript excerpts to Claude via API. Asks for a participant recommendation, confidence score, and reasoning. Parses the structured JSON response and acts as a sanity-check layer. Rate-limited to once per 60 seconds to control API costs.
+Feeds structured participant summaries and recent transcript excerpts to GPT-4o-mini via OpenAI-compatible API. Asks for a participant recommendation, confidence score, and reasoning. Parses the structured JSON response and acts as a sanity-check layer. Rate-limited to once per 60 seconds to control API costs. Falls back to a local transcript heuristic when the API is unavailable or rate-limited.
 
 ---
 
@@ -432,15 +459,15 @@ Feeds structured participant summaries and recent transcript excerpts to Claude 
 
 The evaluation framework runs all seven scenarios and measures:
 
-| Metric | Target |
-|--------|--------|
-| Identification Accuracy | ≥ 6/7 scenarios |
-| Time-to-Correct-ID (happy path) | < 120 seconds |
-| Confidence at ID Point (happy path) | ≥ 0.85 |
-| False Positive Rate | 0% |
-| Uncertainty Flag Rate | ≥ 1 (ambiguous scenarios) |
+| Metric | Target | Current |
+|--------|--------|---------|
+| Identification Accuracy | ≥ 6/7 scenarios | **7/7 (100%)** |
+| Time-to-Correct-ID (happy path) | < 120 seconds | **30s** |
+| Confidence at ID Point (happy path) | ≥ 0.85 | **0.995** |
+| False Positive Rate | 0% | **0%** |
+| Uncertainty Flag Rate | ≥ 1 (ambiguous scenarios) | System resolves with HIGH confidence |
 
-Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from session start — and compared against ground truth labels.
+Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from session start — and compared against ground truth labels. Full results are in `output/evaluation_report.json`.
 
 ---
 
@@ -453,9 +480,10 @@ Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from s
 | Agent Orchestration | Custom Python | Simpler, more inspectable than framework solutions |
 | Fuzzy Matching | RapidFuzz | Fast, accurate token-sort ratio |
 | Face Detection | MediaPipe | Lightweight, CPU-only, no GPU dependency |
-| LLM | Claude (Anthropic API) | Best reasoning quality for edge-case synthesis |
+| LLM | OpenAI GPT-4o-mini (configurable) | Strong reasoning with cost efficiency; OpenAI-compatible |
 | Frontend | React + TypeScript | Live updates, type safety, component ecosystem |
 | Testing | pytest | Unit, integration, and end-to-end coverage |
+| Logging | structlog | Structured JSON logging with timestamps and context |
 | Simulator | Custom Python + asyncio | Real-time event scheduling with speed control |
 
 ---

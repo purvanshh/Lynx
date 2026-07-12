@@ -259,7 +259,7 @@ Per participant, continuously updated:
 
 **Logic:**
 
-1. Feed structured summary (participant metadata, speaking stats, transcript excerpts) to Claude/GPT-4
+1. Feed structured summary (participant metadata, speaking stats, transcript excerpts) to GPT-4o-mini
 2. Prompt: *"Based on this data, which participant is most likely the interview candidate? Explain your reasoning."*
 3. Parse response for `participant_id` recommendation + confidence + explanation
 4. Acts as a sanity check and explainability layer, not the primary signal
@@ -518,7 +518,7 @@ causes score collapse as more agents fire and does not provide a clean multi-cla
 | **Agent Orchestration** | Custom Python (not LangGraph) | Simpler, more inspectable, no framework lock-in |
 | **Fuzzy Matching** | RapidFuzz | Fast, accurate, token sort ratio support |
 | **Face Detection** | MediaPipe | Lightweight, CPU-only, no GPU needed |
-| **LLM** | Claude Sonnet 4 via API | Best reasoning quality; you have access |
+| **LLM** | OpenAI GPT-4o-mini via API | Strong reasoning quality with cost efficiency; configurable |
 | **API Layer** | FastAPI | Async-native, auto-docs, familiar |
 | **Frontend Dashboard** | React + TypeScript | Live confidence updates via WebSocket/SSE |
 | **Mock Simulator** | Custom Python script | Simulates meeting events + streams on schedule |
@@ -606,9 +606,10 @@ Since the prototype does not integrate with real meeting APIs, the simulator mus
 | `POST` | `/sessions/{id}/events` | Inject simulator event (for testing) |
 | `GET` | `/health` | Service health check |
 
-### 12.2 WebSocket (Optional)
+### 12.2 WebSocket
 
-- `ws://host/sessions/{id}/live` - Stream real-time confidence updates
+- `ws://host/sessions/{id}/ws` - Stream real-time confidence updates
+- Pushes `candidate_update` messages on every event and `heartbeat_update` every 30 seconds
 
 ---
 
