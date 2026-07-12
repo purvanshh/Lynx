@@ -123,7 +123,10 @@ class LLMReasoningAgent(BaseAgent):
         }
 
     def _heuristic_results(self, session: SessionState, fallback_reason: str) -> dict[str, AgentResult]:
-        scored_participants = [self._score_participant(session, participant.participant_id) for participant in session.participants]
+        scored_participants = [
+            self._score_participant(session, participant.participant_id)
+            for participant in session.participants
+        ]
         if not scored_participants:
             return {}
 
@@ -151,7 +154,9 @@ class LLMReasoningAgent(BaseAgent):
         return results
 
     def _score_participant(self, session: SessionState, participant_id: str) -> tuple[str, float, str]:
-        participant = next(participant for participant in session.participants if participant.participant_id == participant_id)
+        participant = next(
+            p for p in session.participants if p.participant_id == participant_id
+        )
         utterances = [utterance for utterance in session.transcript if utterance.speaker_id == participant_id]
         utterance_text = " ".join(utterance.utterance for utterance in utterances).lower()
         durations = [utterance.duration_seconds or 0.0 for utterance in utterances]

@@ -13,6 +13,10 @@ from lynx.api.main import app
 from simulator.main import transform_event
 from simulator.scheduler import ScheduledEvent, load_scenario
 
+import structlog
+
+logger = structlog.get_logger(__name__)
+
 DEFAULT_SCENARIOS = [
     "simulator/scenarios/happy_path.json",
     "simulator/scenarios/generic_name.json",
@@ -24,8 +28,6 @@ DEFAULT_SCENARIOS = [
 ]
 DEFAULT_CHECKPOINTS_SECONDS = (30.0, 60.0, 120.0, 300.0)
 DEFAULT_REPORT_PATH = Path("output/evaluation_report.json")
-import structlog
-logger = structlog.get_logger(__name__)
 
 
 @dataclass(slots=True)
@@ -165,8 +167,9 @@ def build_create_session_payload(scenario: dict[str, object]) -> dict[str, objec
             "scheduled_start_time": scenario.get("scheduled_start_time"),
         }
 
+    interviewers = scenario.get("interviewers", [])
     interviewer_names = [
-        interviewer["display_name"] for interviewer in scenario.get("interviewers", []) if interviewer.get("display_name")
+        i["display_name"] for i in interviewers if i.get("display_name")
     ]
     candidate = dict(scenario.get("candidate", {}))
     candidate_name = candidate.get("canonical_name") or scenario.get("candidate_name")

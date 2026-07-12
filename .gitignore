@@ -4,3 +4,5 @@ __pycache__/
 uv.lock
 .pytest_cache/
 .env
+node_modules/
+dashboard/node_modules/
