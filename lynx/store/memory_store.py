@@ -23,6 +23,9 @@ class InMemorySessionStore:
     def clear(self) -> None:
         self._sessions.clear()
 
+    def get_all_session_ids(self) -> list[str]:
+        return list(self._sessions.keys())
+
     def list_participants(self, session_id: str) -> list[dict[str, str]]:
         session = self.get(session_id)
         if session is None:
