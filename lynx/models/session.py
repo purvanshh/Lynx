@@ -11,6 +11,14 @@ class ConfidenceHistoryEntry(BaseModel):
     probabilities: dict[str, float]
 
 
+class SessionEventEntry(BaseModel):
+    timestamp: datetime
+    type: str
+    participant_id: str | None = None
+    display_name: str | None = None
+    details: str | None = None
+
+
 class SessionState(BaseModel):
     session_id: str
     candidate_name: str | None = None
@@ -23,3 +31,4 @@ class SessionState(BaseModel):
     transcript: list[TranscriptUtterance] = Field(default_factory=list)
     prior_probabilities: dict[str, float] = Field(default_factory=dict)
     confidence_history: list[ConfidenceHistoryEntry] = Field(default_factory=list)
+    event_log: list[SessionEventEntry] = Field(default_factory=list)

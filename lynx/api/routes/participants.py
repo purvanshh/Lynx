@@ -58,6 +58,11 @@ def get_candidate(
         "is_candidate": output.confidence_tier in {"HIGH", "MEDIUM"},
         "confidence_tier": output.confidence_tier,
         "evidence": [item.model_dump(mode="json") for item in output.evidence.get(output.top_candidate_id, [])],
+        "candidate_probabilities": output.candidate_probabilities,
+        "participant_evidence": {
+            participant_id: [item.model_dump(mode="json") for item in evidence_items]
+            for participant_id, evidence_items in output.evidence.items()
+        },
         "arbitrator_explanation": output.arbitrator_explanation,
         "updated_at": output.updated_at.isoformat(),
     }

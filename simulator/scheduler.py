@@ -95,7 +95,10 @@ class EventScheduler:
                 ScheduledEvent(
                     offset_seconds=float(name_change["offset_seconds"]),
                     event_type="name_change",
-                    payload=name_change,
+                    payload={
+                        **name_change,
+                        "scheduled_start_time": scheduled_start_time,
+                    },
                 )
             )
 
@@ -104,7 +107,10 @@ class EventScheduler:
                 ScheduledEvent(
                     offset_seconds=float(utterance["offset_seconds"]),
                     event_type="transcript",
-                    payload=utterance,
+                    payload={
+                        **utterance,
+                        "scheduled_start_time": scheduled_start_time,
+                    },
                 )
             )
 

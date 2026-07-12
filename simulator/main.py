@@ -24,6 +24,8 @@ def transform_event(event: ScheduledEvent) -> dict[str, object]:
         "timestamp": timestamp,
     }
     transformed.update({key: value for key, value in payload.items() if key != "scheduled_start_time"})
+    if event.event_type == "transcript" and "participant_id" not in transformed and "speaker_id" in transformed:
+        transformed["participant_id"] = transformed.pop("speaker_id")
     if event.event_type == "name_change" and "new_name" not in transformed and "display_name" in transformed:
         transformed["new_name"] = transformed["display_name"]
     return transformed
