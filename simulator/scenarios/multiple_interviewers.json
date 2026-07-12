@@ -1,88 +1,57 @@
 {
   "scenario_id": "multiple_interviewers",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
+  "session_config": {
+    "candidate_name": "Rahul Sharma",
+    "candidate_email": "rahul.sharma@example.com",
+    "interviewer_names": ["Alice Chen", "Marcus Lee"]
+  },
   "events": [
-    {
-      "offset_seconds": -120,
-      "event_type": "participant_join",
-      "payload": {
-        "participant_id": "p_001",
-        "display_name": "Rahul Sharma",
-        "webcam_on": true,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 0,
-      "event_type": "participant_join",
-      "payload": {
-        "participant_id": "p_002",
-        "display_name": "Alice Chen",
-        "webcam_on": true,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 15,
-      "event_type": "participant_join",
-      "payload": {
-        "participant_id": "p_003",
-        "display_name": "Marcus Lee",
-        "webcam_on": true,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 210,
-      "event_type": "participant_join",
-      "payload": {
-        "participant_id": "p_004",
-        "display_name": "Priya Nair",
-        "webcam_on": false,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 60,
-      "event_type": "transcript",
-      "payload": {
-        "participant_id": "p_002",
-        "utterance": "Rahul, thanks for joining. Let's begin with your background.",
-        "duration_seconds": 5,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 72,
-      "event_type": "transcript",
-      "payload": {
-        "participant_id": "p_001",
-        "utterance": "Thanks, Alice. I've spent the last four years building backend systems for internal developer platforms.",
-        "duration_seconds": 40,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 140,
-      "event_type": "transcript",
-      "payload": {
-        "participant_id": "p_003",
-        "utterance": "Can you describe a migration you owned end to end?",
-        "duration_seconds": 5,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    },
-    {
-      "offset_seconds": 150,
-      "event_type": "transcript",
-      "payload": {
-        "participant_id": "p_001",
-        "utterance": "I led a service decomposition effort where we split critical dependencies, added tracing, and reduced release risk.",
-        "duration_seconds": 55,
-        "scheduled_start_time": "2024-01-15T10:00:00Z"
-      }
-    }
+    {"offset_seconds": -120, "event_type": "participant_join", "payload": {"participant_id": "p_001", "display_name": "Rahul Sharma", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 0, "event_type": "participant_join", "payload": {"participant_id": "p_002", "display_name": "Alice Chen", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 15, "event_type": "participant_join", "payload": {"participant_id": "p_003", "display_name": "Marcus Lee", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 210, "event_type": "participant_join", "payload": {"participant_id": "p_004", "display_name": "Priya Nair", "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 5, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 10, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 20, "event_type": "webcam_frame", "payload": {"participant_id": "p_003", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 45, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Rahul thanks for joining. Let's begin with your background.", "duration_seconds": 5, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 45, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 55, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Thanks Alice. I've spent the last four years building backend systems for internal developer platforms at a large fintech company.", "duration_seconds": 40, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 60, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 70, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 80, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 90, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 95, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "My work focused on reliability automation and improving the developer experience for shipping software.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 105, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 120, "event_type": "transcript", "payload": {"participant_id": "p_003", "utterance": "Can you describe a migration you owned end to end?", "duration_seconds": 5, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 120, "event_type": "speaking_activity", "payload": {"participant_id": "p_003", "activity": [true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 130, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 135, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Sure Marcus. I led a service decomposition where we split critical dependencies added distributed tracing and reduced release risk incrementally.", "duration_seconds": 55, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 140, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 150, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 160, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 170, "event_type": "webcam_frame", "payload": {"participant_id": "p_003", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 170, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 180, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 190, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "The decomposition allowed each team to own their domain end to end.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 205, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 220, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "How did you handle the transition without disrupting ongoing development?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 220, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 230, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 235, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "We used strangler fig pattern gradually routing traffic to new services while keeping old paths as fallbacks. Each cutover was validated with canary analysis.", "duration_seconds": 45, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 240, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 250, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 260, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 270, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 280, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "We never had a regression that reached production during the entire migration.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 290, "event_type": "webcam_frame", "payload": {"participant_id": "p_003", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 300, "event_type": "transcript", "payload": {"participant_id": "p_003", "utterance": "That's a great approach. Rahul any questions for us about the role?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 300, "event_type": "speaking_activity", "payload": {"participant_id": "p_003", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 310, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 315, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "I'm interested in how the team approaches technical decision making and what the roadmap looks like for the next year.", "duration_seconds": 8, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 315, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 330, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}}
   ],
   "ground_truth_candidate_id": "p_001",
-  "ground_truth_notes": "Two interviewers and a late observer add crowd noise, but p_001 should remain the strongest candidate through early join and burst-style responses."
+  "ground_truth_notes": "Two interviewers Alice Chen and Marcus Lee plus a late observer Priya Nair add crowd noise. p_001 should remain strongest through early join, burst responses, and solo window."
 }

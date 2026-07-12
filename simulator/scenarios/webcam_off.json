@@ -1,44 +1,55 @@
 {
   "scenario_id": "webcam_off",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "candidate": {
-    "participant_id": "p_001",
-    "display_name": "Rahul Sharma",
-    "join_offset_seconds": -120,
-    "webcam_on": false,
-    "speaking_pattern": "burst",
-    "expected_speaking_duration": 1500
+  "session_config": {
+    "candidate_name": "Rahul Sharma",
+    "candidate_email": "rahul.sharma@example.com",
+    "interviewer_names": ["Alice Chen"]
   },
-  "interviewers": [
-    {
-      "participant_id": "p_002",
-      "display_name": "Alice Chen",
-      "join_offset_seconds": 0,
-      "webcam_on": false,
-      "speaking_pattern": "uniform",
-      "expected_speaking_duration": 900
-    }
-  ],
-  "transcript": [
-    {
-      "offset_seconds": 60,
-      "speaker_id": "p_002",
-      "utterance": "Thanks for joining, Rahul. Could you start with your recent projects?",
-      "duration_seconds": 5
-    },
-    {
-      "offset_seconds": 72,
-      "speaker_id": "p_001",
-      "utterance": "I recently led reliability improvements across a set of internal platform services.",
-      "duration_seconds": 43
-    },
-    {
-      "offset_seconds": 145,
-      "speaker_id": "p_001",
-      "utterance": "That work included release safeguards, telemetry, and response playbooks for critical systems.",
-      "duration_seconds": 51
-    }
+  "events": [
+    {"offset_seconds": -120, "event_type": "participant_join", "payload": {"participant_id": "p_001", "display_name": "Rahul Sharma", "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 0, "event_type": "participant_join", "payload": {"participant_id": "p_002", "display_name": "Alice Chen", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 5, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 10, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 0, "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 10, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Hey Rahul thanks for your time today. Tell me a bit about your experience.", "duration_seconds": 5, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 10, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 20, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Of course. I have seven years of experience designing and building distributed systems. I spent the last three years at a logistics company where I led the migration from a monolith to microservices.", "duration_seconds": 45, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 25, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 35, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 45, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 55, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 60, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "The migration was phased over eighteen months and improved deployment frequency significantly.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 65, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 0, "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 75, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 90, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "What was the biggest technical challenge in that migration?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 90, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 100, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "The biggest challenge was data consistency during the cutover. We had to maintain a dual write phase for several critical tables and build reconciliation jobs to detect and fix drift.", "duration_seconds": 55, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 105, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 115, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 125, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 135, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 145, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 155, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Reconciliation was critical for catching edge cases that the dual write logic missed.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 165, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 0, "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 180, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 195, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "How did you get buy-in from stakeholders for such a complex migration?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 195, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 205, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "We presented the business case with clear metrics around deployment speed reliability and developer satisfaction. We also ran a small proof of concept first to demonstrate viability.", "duration_seconds": 50, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 210, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 220, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 230, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 240, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 250, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 255, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "The proof of concept was crucial for building confidence.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 265, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 0, "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 280, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 295, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Great answer. Do you have any questions for me about the team?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 295, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 305, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "I would like to know about the team's current biggest technical challenge and what the on-call rotation looks like.", "duration_seconds": 8, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 310, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 325, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 0, "webcam_on": false, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 330, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}}
   ],
   "ground_truth_candidate_id": "p_001",
-  "ground_truth_notes": "All webcams are off, so FaceConsistencyAgent should be globally inactive and the remaining agents must still identify p_001."
+  "ground_truth_notes": "Candidate has webcam off for entire session. FaceCountDetector will report face_count=0 for all candidate frames. The system must rely on name matching and speaking patterns instead of visual signals."
 }

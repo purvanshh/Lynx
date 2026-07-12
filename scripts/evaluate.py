@@ -156,6 +156,15 @@ def _scenario_events(scenario: dict[str, object]) -> list[ScheduledEvent]:
 
 
 def build_create_session_payload(scenario: dict[str, object]) -> dict[str, object]:
+    session_config = dict(scenario.get("session_config", {}))
+    if session_config:
+        return {
+            "candidate_name": session_config.get("candidate_name", "Rahul Sharma"),
+            "candidate_email": session_config.get("candidate_email", "rahul.sharma@example.com"),
+            "interviewer_names": list(session_config.get("interviewer_names", [])),
+            "scheduled_start_time": scenario.get("scheduled_start_time"),
+        }
+
     interviewer_names = [
         interviewer["display_name"] for interviewer in scenario.get("interviewers", []) if interviewer.get("display_name")
     ]

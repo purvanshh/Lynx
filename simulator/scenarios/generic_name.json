@@ -1,51 +1,53 @@
 {
   "scenario_id": "generic_name",
   "scheduled_start_time": "2024-01-15T10:00:00Z",
-  "candidate": {
-    "participant_id": "p_001",
-    "display_name": "MacBook Pro",
-    "join_offset_seconds": -90,
-    "webcam_on": true,
-    "speaking_pattern": "burst",
-    "expected_speaking_duration": 1500
+  "session_config": {
+    "candidate_name": "Rahul Sharma",
+    "candidate_email": "rahul.sharma@example.com",
+    "interviewer_names": ["Alice Chen"]
   },
-  "interviewers": [
-    {
-      "participant_id": "p_002",
-      "display_name": "Alice Chen",
-      "join_offset_seconds": 0,
-      "webcam_on": true,
-      "speaking_pattern": "uniform",
-      "expected_speaking_duration": 780
-    }
-  ],
-  "observers": [],
-  "transcript": [
-    {
-      "offset_seconds": 45,
-      "speaker_id": "p_002",
-      "utterance": "Thanks for joining. Could you walk me through your recent work?",
-      "duration_seconds": 5
-    },
-    {
-      "offset_seconds": 55,
-      "speaker_id": "p_001",
-      "utterance": "Absolutely. I recently built automation for release pipelines and observability for customer-facing services.",
-      "duration_seconds": 42
-    },
-    {
-      "offset_seconds": 120,
-      "speaker_id": "p_002",
-      "utterance": "How did you measure the impact of that effort?",
-      "duration_seconds": 4
-    },
-    {
-      "offset_seconds": 130,
-      "speaker_id": "p_001",
-      "utterance": "We reduced deployment rollback rates and improved mean time to recovery by instrumenting the critical path end to end.",
-      "duration_seconds": 48
-    }
+  "events": [
+    {"offset_seconds": -90, "event_type": "participant_join", "payload": {"participant_id": "p_001", "display_name": "MacBook Pro", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 0, "event_type": "participant_join", "payload": {"participant_id": "p_002", "display_name": "Alice Chen", "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 5, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 10, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 40, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Thanks for joining. Could you walk me through your recent work?", "duration_seconds": 5, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 40, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 45, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 50, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Absolutely. I recently built automation for release pipelines and observability for customer-facing services.", "duration_seconds": 42, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 55, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 65, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 75, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 75, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 85, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 92, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "These improvements helped reduce incident response time and gave teams better visibility into their production systems.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 105, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 130, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "How did you measure the impact of that effort?", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 130, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 135, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 140, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "We reduced deployment rollback rates and improved mean time to recovery by instrumenting the critical path end to end.", "duration_seconds": 48, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 145, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 155, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 165, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 175, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 175, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 188, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "Incident response time dropped significantly and team confidence in deployments increased.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 200, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 220, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Can you describe a specific technical challenge you overcame?", "duration_seconds": 5, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 220, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 225, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 230, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "One challenge was migrating a legacy database with zero downtime. We used blue-green deployment with dual-writes and careful rollback planning.", "duration_seconds": 50, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 235, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 245, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 255, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 265, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 275, "event_type": "speaking_activity", "payload": {"participant_id": "p_001", "activity": [true, true, true, true, true, true, true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 280, "event_type": "transcript", "payload": {"participant_id": "p_001", "utterance": "The migration completed without any user-facing downtime.", "duration_seconds": 0, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 295, "event_type": "webcam_frame", "payload": {"participant_id": "p_002", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 310, "event_type": "transcript", "payload": {"participant_id": "p_002", "utterance": "Thanks for the detailed answer. I think we're all set. Appreciate your time.", "duration_seconds": 4, "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 310, "event_type": "speaking_activity", "payload": {"participant_id": "p_002", "activity": [true, true, true, true], "scheduled_start_time": "2024-01-15T10:00:00Z"}},
+    {"offset_seconds": 315, "event_type": "webcam_frame", "payload": {"participant_id": "p_001", "face_count": 1, "webcam_on": true, "scheduled_start_time": "2024-01-15T10:00:00Z"}}
   ],
   "ground_truth_candidate_id": "p_001",
-  "ground_truth_notes": "Generic device-style display name weakens NameMatcher, so temporal, behavioral, and solo-window evidence must carry the decision."
+  "ground_truth_notes": "Generic device-style display name 'MacBook Pro' weakens NameMatcher, so temporal, behavioral, and solo-window evidence must carry the decision."
 }

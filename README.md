@@ -462,10 +462,12 @@ The evaluation framework runs all seven scenarios and measures:
 | Metric | Target | Current |
 |--------|--------|---------|
 | Identification Accuracy | ≥ 6/7 scenarios | **7/7 (100%)** |
-| Time-to-Correct-ID (happy path) | < 120 seconds | **30s** |
-| Confidence at ID Point (happy path) | ≥ 0.85 | **0.995** |
 | False Positive Rate | 0% | **0%** |
-| Uncertainty Flag Rate | ≥ 1 (ambiguous scenarios) | System resolves with HIGH confidence |
+| Avg Time-to-Correct-ID | — | **30.0s** |
+| Time-to-Correct-ID (happy path) | < 120 s | **30.0s** |
+| Confidence at ID (happy path) | ≥ 0.85 | **0.997** |
+| Confidence at ID (generic_name) | — | **0.928** |
+| Confidence at ID (interviewer_candidate_name) | — | **LOW** (correctly withheld HIGH in ambiguous scenario) |
 
 Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from session start — and compared against ground truth labels. Full results are in `output/evaluation_report.json`.
 

@@ -6,68 +6,14 @@
     "scenarios_passed": 7,
     "uncertainty_flags_correct": 0,
     "happy_path_time_to_correct_id_seconds": 30.0,
-    "happy_path_confidence_at_id": 0.9953798689900846
+    "happy_path_confidence_at_id": 0.9974605047823317
   },
   "results": [
     {
       "scenario_id": "happy_path",
       "correct_candidate_id": "p_001",
       "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.9953798689900846,
-      "final_accuracy": true,
-      "false_positive": false,
-      "uncertainty_flagged": false,
-      "final_candidate_id": "p_001",
-      "final_confidence_tier": "HIGH",
-      "checkpoints_seen": [
-        30.0,
-        60.0,
-        120.0,
-        140.0,
-        300.0
-      ]
-    },
-    {
-      "scenario_id": "generic_name",
-      "correct_candidate_id": "p_001",
-      "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.9105229611536858,
-      "final_accuracy": true,
-      "false_positive": false,
-      "uncertainty_flagged": false,
-      "final_candidate_id": "p_001",
-      "final_confidence_tier": "HIGH",
-      "checkpoints_seen": [
-        30.0,
-        60.0,
-        120.0,
-        130.0,
-        300.0
-      ]
-    },
-    {
-      "scenario_id": "multiple_interviewers",
-      "correct_candidate_id": "p_001",
-      "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.8992908966572628,
-      "final_accuracy": true,
-      "false_positive": false,
-      "uncertainty_flagged": false,
-      "final_candidate_id": "p_001",
-      "final_confidence_tier": "HIGH",
-      "checkpoints_seen": [
-        30.0,
-        60.0,
-        120.0,
-        210.0,
-        300.0
-      ]
-    },
-    {
-      "scenario_id": "name_change",
-      "correct_candidate_id": "p_001",
-      "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.9105229611536858,
+      "confidence_at_identification": 0.9974605047823317,
       "final_accuracy": true,
       "false_positive": false,
       "uncertainty_flagged": false,
@@ -78,7 +24,61 @@
         60.0,
         120.0,
         300.0,
-        336.0
+        315.0
+      ]
+    },
+    {
+      "scenario_id": "generic_name",
+      "correct_candidate_id": "p_001",
+      "identified_at_seconds": 30.0,
+      "confidence_at_identification": 0.9276665940453753,
+      "final_accuracy": true,
+      "false_positive": false,
+      "uncertainty_flagged": false,
+      "final_candidate_id": "p_001",
+      "final_confidence_tier": "HIGH",
+      "checkpoints_seen": [
+        30.0,
+        60.0,
+        120.0,
+        300.0,
+        315.0
+      ]
+    },
+    {
+      "scenario_id": "multiple_interviewers",
+      "correct_candidate_id": "p_001",
+      "identified_at_seconds": 30.0,
+      "confidence_at_identification": 0.9936328959669237,
+      "final_accuracy": true,
+      "false_positive": false,
+      "uncertainty_flagged": false,
+      "final_candidate_id": "p_001",
+      "final_confidence_tier": "HIGH",
+      "checkpoints_seen": [
+        30.0,
+        60.0,
+        120.0,
+        300.0,
+        330.0
+      ]
+    },
+    {
+      "scenario_id": "name_change",
+      "correct_candidate_id": "p_001",
+      "identified_at_seconds": 30.0,
+      "confidence_at_identification": 0.9276665940453753,
+      "final_accuracy": true,
+      "false_positive": false,
+      "uncertainty_flagged": false,
+      "final_candidate_id": "p_001",
+      "final_confidence_tier": "HIGH",
+      "checkpoints_seen": [
+        30.0,
+        60.0,
+        120.0,
+        300.0,
+        375.0
       ]
     },
     {
@@ -95,15 +95,15 @@
         30.0,
         60.0,
         120.0,
-        142.0,
-        300.0
+        300.0,
+        345.0
       ]
     },
     {
       "scenario_id": "no_solo_window",
       "correct_candidate_id": "p_001",
       "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.8985816623620169,
+      "confidence_at_identification": 0.9975314152118794,
       "final_accuracy": true,
       "false_positive": false,
       "uncertainty_flagged": false,
@@ -111,17 +111,17 @@
       "final_confidence_tier": "HIGH",
       "checkpoints_seen": [
         30.0,
-        55.0,
         60.0,
         120.0,
-        300.0
+        300.0,
+        330.0
       ]
     },
     {
       "scenario_id": "webcam_off",
       "correct_candidate_id": "p_001",
       "identified_at_seconds": 30.0,
-      "confidence_at_identification": 0.9977673423849449,
+      "confidence_at_identification": 0.9945919349850137,
       "final_accuracy": true,
       "false_positive": false,
       "uncertainty_flagged": false,
@@ -131,8 +131,8 @@
         30.0,
         60.0,
         120.0,
-        145.0,
-        300.0
+        300.0,
+        330.0
       ]
     }
   ]
