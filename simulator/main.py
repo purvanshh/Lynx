@@ -9,6 +9,9 @@ from urllib.request import Request, urlopen
 
 from simulator.scheduler import EventScheduler, ScheduledEvent, load_scenario
 
+import structlog
+logger = structlog.get_logger(__name__)
+
 
 def _iso_from_scheduled_start(scheduled_start: str, offset_seconds: float) -> str:
     scheduled_dt = datetime.fromisoformat(scheduled_start.replace("Z", "+00:00"))
@@ -62,7 +65,7 @@ async def run_cli() -> None:
         )
 
     async def stdout_handler(event: ScheduledEvent) -> None:
-        print(json.dumps({"event_type": event.event_type, "payload": event.payload}, default=str))
+        logger.info("simulator_event", event_type=event.event_type, payload=event.payload)
 
     scheduler.add_handler(http_handler)
     scheduler.add_handler(stdout_handler)

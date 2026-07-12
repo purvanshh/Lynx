@@ -1,5 +1,9 @@
+import structlog
+logger = structlog.get_logger(__name__)
+
+
 def main() -> None:
-    print("Seed-data scaffold. Add sample session generation here.")
+    logger.info("Seed-data scaffold. Add sample session generation here.")
 
 
 if __name__ == "__main__":

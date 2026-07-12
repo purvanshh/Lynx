@@ -23,6 +23,9 @@ DEFAULT_SCENARIOS = [
     "simulator/scenarios/webcam_off.json",
 ]
 DEFAULT_CHECKPOINTS_SECONDS = (30.0, 60.0, 120.0, 300.0)
+DEFAULT_REPORT_PATH = Path("output/evaluation_report.json")
+import structlog
+logger = structlog.get_logger(__name__)
 
 
 @dataclass(slots=True)
@@ -36,6 +39,7 @@ class EvaluationResult:
     uncertainty_flagged: bool
     final_candidate_id: str | None
     final_confidence_tier: str | None
+    checkpoints_seen: list[float]
 
 
 class CandidateApiClient(Protocol):
@@ -185,16 +189,38 @@ def compute_metrics(results: list[EvaluationResult]) -> dict[str, float | int]:
         "avg_time_to_correct_id_seconds": avg_time_to_id,
         "scenarios_passed": sum(1 for result in results if result.final_accuracy),
         "uncertainty_flags_correct": sum(1 for result in results if result.uncertainty_flagged),
+        "happy_path_time_to_correct_id_seconds": next(
+            (
+                result.identified_at_seconds
+                for result in results
+                if result.scenario_id == "happy_path" and result.identified_at_seconds is not None
+            ),
+            0.0,
+        ),
+        "happy_path_confidence_at_id": next(
+            (
+                result.confidence_at_identification
+                for result in results
+                if result.scenario_id == "happy_path"
+            ),
+            0.0,
+        ),
     }
 
 
 def assert_prd_targets(metrics: dict[str, float | int]) -> None:
     accuracy = float(metrics["identification_accuracy"])
     false_positive_rate = float(metrics["false_positive_rate"])
+    happy_path_time = float(metrics["happy_path_time_to_correct_id_seconds"])
+    happy_path_confidence = float(metrics["happy_path_confidence_at_id"])
     if accuracy < (6 / 7):
         raise AssertionError(f"Accuracy too low: {accuracy:.2%}")
     if false_positive_rate > 0:
         raise AssertionError(f"False positive rate too high: {false_positive_rate:.2%}")
+    if happy_path_time > 120:
+        raise AssertionError(f"Happy-path identification is too slow: {happy_path_time:.1f}s")
+    if happy_path_confidence < 0.85:
+        raise AssertionError(f"Happy-path identification confidence is too low: {happy_path_confidence:.2f}")
 
 
 async def run_scenario(
@@ -214,6 +240,7 @@ async def run_scenario(
     false_positive = False
     uncertainty_flagged = False
     final_candidate_payload: dict[str, object] | None = None
+    checkpoints_seen: list[float] = []
 
     next_event_index = 0
     all_checkpoints = sorted({*checkpoints_seconds, *(max((event.offset_seconds for event in events), default=0.0),)})
@@ -229,6 +256,7 @@ async def run_scenario(
             continue
 
         final_candidate_payload = candidate_payload
+        checkpoints_seen.append(checkpoint)
         predicted_candidate_id = candidate_payload.get("participant_id")
         confidence_tier = candidate_payload.get("confidence_tier")
         candidate_probability = float(candidate_payload.get("candidate_probability", 0.0))
@@ -264,6 +292,7 @@ async def run_scenario(
         uncertainty_flagged=uncertainty_flagged,
         final_candidate_id=str(final_candidate_id) if final_candidate_id is not None else None,
         final_confidence_tier=str(final_confidence_tier) if final_confidence_tier is not None else None,
+        checkpoints_seen=checkpoints_seen,
     )
 
 
@@ -279,9 +308,12 @@ async def run_evaluation(
         for scenario_path in scenarios:
             result = await run_scenario(scenario_path, client)
             results.append(result)
-            print(
-                f"[{result.scenario_id}] final_candidate={result.final_candidate_id} "
-                f"tier={result.final_confidence_tier} accurate={result.final_accuracy}"
+            logger.info(
+                "scenario_complete",
+                scenario_id=result.scenario_id,
+                final_candidate=result.final_candidate_id,
+                tier=result.final_confidence_tier,
+                accurate=result.final_accuracy,
             )
         metrics = compute_metrics(results)
         return results, metrics
@@ -303,24 +335,39 @@ def parse_args() -> argparse.Namespace:
         dest="scenarios",
         help="Optional scenario path. Repeat to run a subset.",
     )
+    parser.add_argument(
+        "--report-path",
+        default=str(DEFAULT_REPORT_PATH),
+        help="Where to write the evaluation report JSON.",
+    )
     return parser.parse_args()
+
+
+def write_report(
+    results: list[EvaluationResult],
+    metrics: dict[str, float | int],
+    report_path: Path,
+) -> Path:
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report = {
+        "metrics": metrics,
+        "results": [asdict(result) for result in results],
+    }
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    return report_path
 
 
 async def _async_main() -> None:
     args = parse_args()
     scenarios = args.scenarios or DEFAULT_SCENARIOS
     results, metrics = await run_evaluation(scenarios, api_url=args.api_url, in_process=args.in_process)
-
-    print("\n" + "=" * 50)
-    print("EVALUATION REPORT")
-    print("=" * 50)
-    print(json.dumps(metrics, indent=2))
-    print("\nSCENARIO DETAILS")
-    for result in results:
-        print(json.dumps(asdict(result), indent=2))
+    report_path = write_report(results, metrics, Path(args.report_path))
+    logger.info("evaluation_report", metrics=metrics)
+    logger.info("scenario_details", details=[asdict(result) for result in results])
+    logger.info("report_saved", path=str(report_path))
 
     assert_prd_targets(metrics)
-    print("\nAll PRD targets met.")
+    logger.info("All PRD targets met.")
 
 
 def main() -> None:
