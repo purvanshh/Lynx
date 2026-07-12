@@ -8,6 +8,7 @@ class CreateSessionRequest(BaseModel):
     candidate_email: str | None = None
     interviewer_names: list[str] = Field(default_factory=list)
     scheduled_start_time: datetime | None = None
+    calendar_invite_text: str | None = None
 
 
 class EventRequest(BaseModel):

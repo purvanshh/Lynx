@@ -14,6 +14,7 @@ def test_health() -> None:
     client = TestClient(app)
     response = client.get("/health")
     assert response.status_code == 200
+    assert response.headers["x-request-id"]
 
 
 def test_candidate_route_uses_orchestrator_output() -> None:
@@ -149,6 +150,7 @@ def test_session_and_participant_endpoints_return_expected_state() -> None:
     assert session_response.json()["session_id"] == session_id
     assert participants_response.status_code == 200
     assert participants_response.json()[0]["display_name"] == "Rahul Sharma"
+    assert "candidate_probability" in participants_response.json()[0]
 
 
 def test_api_returns_404_for_unknown_session_and_422_for_malformed_event() -> None:

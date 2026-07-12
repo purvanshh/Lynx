@@ -14,11 +14,20 @@ router = APIRouter(prefix="/sessions", tags=["participants"])
 def get_participants(
     session_id: str,
     store: InMemorySessionStore = Depends(get_store),
-) -> list[dict[str, str]]:
+) -> list[dict[str, object]]:
     session = store.get(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
-    return store.list_participants(session_id)
+    participants = store.list_participants(session_id)
+    probabilities = session.prior_probabilities
+    return [
+        {
+            "participant_id": p["participant_id"],
+            "display_name": p["display_name"],
+            "candidate_probability": probabilities.get(p["participant_id"]),
+        }
+        for p in participants
+    ]
 
 
 @router.get("/{session_id}/candidate")

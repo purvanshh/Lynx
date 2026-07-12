@@ -25,6 +25,7 @@ class SessionState(BaseModel):
     candidate_email: str | None = None
     interviewer_names: list[str] = Field(default_factory=list)
     scheduled_start_time: datetime | None = None
+    calendar_invite_text: str | None = None
     created_at: datetime | None = None
     current_time: datetime | None = None
     participants: list[Participant] = Field(default_factory=list)

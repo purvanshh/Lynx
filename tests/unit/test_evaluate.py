@@ -16,6 +16,7 @@ def test_compute_metrics_aggregates_results() -> None:
                 uncertainty_flagged=False,
                 final_candidate_id="p1",
                 final_confidence_tier="HIGH",
+                checkpoints_seen=[30.0, 60.0],
             ),
             EvaluationResult(
                 scenario_id="generic_name",
@@ -27,6 +28,7 @@ def test_compute_metrics_aggregates_results() -> None:
                 uncertainty_flagged=True,
                 final_candidate_id="p2",
                 final_confidence_tier="HIGH",
+                checkpoints_seen=[30.0, 60.0, 120.0],
             ),
         ]
     )
@@ -36,6 +38,8 @@ def test_compute_metrics_aggregates_results() -> None:
     assert metrics["avg_time_to_correct_id_seconds"] == 60.0
     assert metrics["scenarios_passed"] == 1
     assert metrics["uncertainty_flags_correct"] == 1
+    assert metrics["happy_path_time_to_correct_id_seconds"] == 60.0
+    assert metrics["happy_path_confidence_at_id"] == 0.91
 
 
 def test_assert_prd_targets_rejects_failed_metrics() -> None:
@@ -47,6 +51,8 @@ def test_assert_prd_targets_rejects_failed_metrics() -> None:
                 "avg_time_to_correct_id_seconds": 0.0,
                 "scenarios_passed": 1,
                 "uncertainty_flags_correct": 0,
+                "happy_path_time_to_correct_id_seconds": 180.0,
+                "happy_path_confidence_at_id": 0.6,
             }
         )
     except AssertionError as error:
@@ -67,3 +73,17 @@ def test_run_evaluation_in_process_happy_path() -> None:
     assert results[0].scenario_id == "happy_path"
     assert results[0].final_accuracy is True
     assert metrics["identification_accuracy"] == 1.0
+
+
+def test_assert_prd_targets_accepts_healthy_metrics() -> None:
+    assert_prd_targets(
+        {
+            "identification_accuracy": 1.0,
+            "false_positive_rate": 0.0,
+            "avg_time_to_correct_id_seconds": 30.0,
+            "scenarios_passed": 7,
+            "uncertainty_flags_correct": 1,
+            "happy_path_time_to_correct_id_seconds": 30.0,
+            "happy_path_confidence_at_id": 0.9,
+        }
+    )

@@ -36,6 +36,7 @@ def create_session(
         candidate_email=request.candidate_email,
         interviewer_names=request.interviewer_names,
         scheduled_start_time=request.scheduled_start_time,
+        calendar_invite_text=request.calendar_invite_text,
         created_at=timestamp,
         current_time=timestamp,
     )
@@ -141,6 +142,13 @@ def inject_event(
             participant.webcam_on = event.webcam_on
         display_name = participant.display_name
         details = f"face_count={event.face_count}" if event.face_count is not None else "frame sampled"
+    elif event.type == "screen_share":
+        if not event.participant_id:
+            raise HTTPException(status_code=400, detail="screen_share requires participant_id")
+        participant = _find_participant(session, event.participant_id)
+        participant.screen_share_events.append(event.timestamp)
+        display_name = participant.display_name
+        details = "screen share event"
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported event type '{event.type}'")
 

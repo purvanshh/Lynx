@@ -48,10 +48,12 @@ def test_llm_reasoning_agent_returns_neutral_without_api_key() -> None:
         now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
     )
 
-    result = agent.evaluate(make_session(), "p1")
+    winner = agent.evaluate(make_session(), "p1")
+    loser = agent.evaluate(make_session(), "p2")
 
-    assert result.score == 0.5
-    assert "not configured" in result.reasoning.lower()
+    assert winner.score > loser.score
+    assert "not configured" in winner.reasoning.lower()
+    assert "heuristic" in winner.reasoning.lower()
 
 
 def test_llm_reasoning_agent_maps_llm_choice_to_participant_scores() -> None:
@@ -95,7 +97,7 @@ def test_llm_reasoning_agent_rate_limits_follow_up_calls() -> None:
     second_result = agent.evaluate(make_session().model_copy(update={"session_id": "llm-session-2"}), "p1")
 
     assert first_result.score == 0.9
-    assert second_result.score == 0.5
+    assert second_result.score != 0.5
     assert "rate limit" in second_result.reasoning.lower()
 
 
@@ -112,7 +114,7 @@ def test_llm_reasoning_agent_handles_unknown_participant_response() -> None:
 
     result = agent.evaluate(make_session(), "p1")
 
-    assert result.score == 0.5
+    assert result.score != 0.5
     assert "unknown participant" in result.reasoning.lower()
 
 
@@ -141,5 +143,54 @@ def test_llm_reasoning_agent_falls_back_on_malformed_json() -> None:
 
     result = agent.evaluate(make_session(), "p1")
 
-    assert result.score == 0.5
+    assert result.score != 0.5
     assert "failed" in result.reasoning.lower()
+
+
+def test_llm_reasoning_agent_heuristic_penalizes_question_asking_interviewer() -> None:
+    start = datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc)
+    session = SessionState(
+        session_id="heuristic-session",
+        candidate_name="Rahul Sharma",
+        candidate_email="rahul.sharma@example.com",
+        interviewer_names=["Alice Chen"],
+        scheduled_start_time=start,
+        participants=[
+            Participant(
+                participant_id="p1",
+                display_name="MacBook Pro",
+                join_timestamp=start - timedelta(minutes=2),
+                webcam_on=True,
+            ),
+            Participant(
+                participant_id="p2",
+                display_name="Alice Chen",
+                join_timestamp=start,
+                webcam_on=True,
+            ),
+        ],
+        transcript=[
+            TranscriptUtterance(
+                speaker_id="p2",
+                utterance="Thanks for joining Rahul. Can you walk me through your recent work?",
+                timestamp=start + timedelta(seconds=30),
+                duration_seconds=5.0,
+            ),
+            TranscriptUtterance(
+                speaker_id="p1",
+                utterance="I led backend reliability work and improved deployment safety for our services.",
+                timestamp=start + timedelta(seconds=45),
+                duration_seconds=40.0,
+            ),
+        ],
+    )
+    agent = LLMReasoningAgent(
+        settings=Settings(llm_api_key=None),
+        now_provider=lambda: datetime(2026, 7, 11, 9, 1, tzinfo=timezone.utc),
+    )
+
+    candidate_result = agent.evaluate(session, "p1")
+    interviewer_result = agent.evaluate(session, "p2")
+
+    assert candidate_result.score > interviewer_result.score
+    assert "question/interviewer cues" in interviewer_result.reasoning.lower()

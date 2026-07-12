@@ -18,3 +18,4 @@ class Participant(BaseModel):
     webcam_frames: list[WebcamFrame] = Field(default_factory=list)
     speaking_activity: list[bool] = Field(default_factory=list)
     speaking_duration_total: float = 0.0
+    screen_share_events: list[datetime] = Field(default_factory=list)

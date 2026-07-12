@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from datetime import datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+from rapidfuzz import fuzz
 
 from lynx.agents.base import AgentResult, BaseAgent
 from lynx.arbitrator.weights import DEFAULT_AGENT_WEIGHTS
@@ -45,34 +48,43 @@ class LLMReasoningAgent(BaseAgent):
     def _evaluate_session(self, session: SessionState) -> dict[str, AgentResult]:
         participant_ids = [participant.participant_id for participant in session.participants]
         now = self.now_provider()
+        if not participant_ids:
+            return {}
 
         if not self.settings.llm_enabled:
-            return self._neutral_results(session, "LLM analysis disabled in configuration.")
+            return self._heuristic_results(session, "LLM analysis disabled in configuration.")
         if self.last_call_time is not None:
             elapsed = (now - self.last_call_time).total_seconds()
             if elapsed < self.settings.llm_rate_limit_seconds:
-                return self._neutral_results(
+                return self._heuristic_results(
                     session,
-                    f"LLM rate limit active. Reusing neutral output until {self.settings.llm_rate_limit_seconds}s have elapsed.",
+                    (
+                        "LLM rate limit active. Falling back to the local transcript heuristic "
+                        f"until {self.settings.llm_rate_limit_seconds}s have elapsed."
+                    ),
                 )
         if not self.settings.llm_api_key:
-            return self._neutral_results(session, "LLM API key not configured. Returning neutral reasoning signal.")
-        if not participant_ids:
-            return {}
+            return self._heuristic_results(
+                session,
+                "LLM API key not configured. Used the local transcript heuristic instead.",
+            )
 
         prompt = self._build_prompt(session)
         try:
             llm_payload = self.transport(prompt)
         except (HTTPError, URLError, TimeoutError, ValueError, KeyError) as exc:
-            return self._neutral_results(session, f"LLM request failed: {exc}. Returning neutral reasoning signal.")
+            return self._heuristic_results(
+                session,
+                f"LLM request failed: {exc}. Used the local transcript heuristic instead.",
+            )
 
         candidate_id = llm_payload["participant_id"]
         confidence = float(llm_payload["confidence"])
         explanation = str(llm_payload["explanation"]).strip()
         if candidate_id not in participant_ids:
-            return self._neutral_results(
+            return self._heuristic_results(
                 session,
-                f"LLM returned unknown participant '{candidate_id}'. Returning neutral reasoning signal.",
+                f"LLM returned unknown participant '{candidate_id}'. Used the local transcript heuristic instead.",
             )
 
         self.last_call_time = now
@@ -109,6 +121,112 @@ class LLMReasoningAgent(BaseAgent):
             )
             for participant in session.participants
         }
+
+    def _heuristic_results(self, session: SessionState, fallback_reason: str) -> dict[str, AgentResult]:
+        scored_participants = [self._score_participant(session, participant.participant_id) for participant in session.participants]
+        if not scored_participants:
+            return {}
+
+        best_score = max(score for _, score, _ in scored_participants)
+        second_best_score = max(
+            (score for _, score, _ in scored_participants if score != best_score),
+            default=best_score,
+        )
+        confidence_boost = min(0.15, max(0.0, best_score - second_best_score) * 0.5)
+        winner_score = min(0.92, best_score + confidence_boost)
+
+        results: dict[str, AgentResult] = {}
+        winner_id = max(scored_participants, key=lambda item: item[1])[0]
+        for participant_id, score, reasoning in scored_participants:
+            adjusted_score = winner_score if participant_id == winner_id else score
+            if participant_id != winner_id:
+                reasoning = f"{reasoning} Heuristic favored '{winner_id}' instead."
+            results[participant_id] = AgentResult(
+                agent=self.name,
+                participant_id=participant_id,
+                score=round(max(0.05, min(0.95, adjusted_score)), 3),
+                weight=self.weight,
+                reasoning=f"{fallback_reason} {reasoning}",
+            )
+        return results
+
+    def _score_participant(self, session: SessionState, participant_id: str) -> tuple[str, float, str]:
+        participant = next(participant for participant in session.participants if participant.participant_id == participant_id)
+        utterances = [utterance for utterance in session.transcript if utterance.speaker_id == participant_id]
+        utterance_text = " ".join(utterance.utterance for utterance in utterances).lower()
+        durations = [utterance.duration_seconds or 0.0 for utterance in utterances]
+        avg_duration = sum(durations) / len(durations) if durations else 0.0
+        total_duration = sum(durations)
+
+        first_person_markers = len(re.findall(r"\b(i|i'm|i’ve|i've|my|me|we|our|us)\b", utterance_text))
+        question_markers = utterance_text.count("?")
+        interviewer_cues = sum(
+            utterance_text.count(phrase)
+            for phrase in (
+                "can you",
+                "could you",
+                "tell me",
+                "walk me through",
+                "thanks for joining",
+                "let's start",
+                "how did you",
+            )
+        )
+        candidate_name_mentions = 0
+        if session.candidate_name:
+            candidate_tokens = [
+                token.lower()
+                for token in session.candidate_name.split()
+                if token.strip()
+            ]
+            candidate_name_mentions = sum(utterance_text.count(token) for token in candidate_tokens)
+
+        interviewer_name_match = max(
+            (
+                fuzz.token_sort_ratio(participant.display_name.lower(), interviewer_name.strip().lower())
+                for interviewer_name in session.interviewer_names
+            ),
+            default=0,
+        )
+
+        score = 0.5
+        score += min(0.18, 0.05 * first_person_markers)
+        score -= min(0.28, 0.10 * question_markers + 0.06 * interviewer_cues)
+        score -= min(0.15, 0.04 * candidate_name_mentions) if question_markers or interviewer_cues else 0.0
+        if avg_duration >= 25:
+            score += 0.12
+        elif avg_duration <= 8 and utterances:
+            score -= 0.12
+        if total_duration >= 70:
+            score += 0.08
+        if utterances and len(utterances) <= 2 and avg_duration >= 30:
+            score += 0.04
+        if interviewer_name_match > 80:
+            score -= 0.30
+
+        if session.scheduled_start_time is not None and participant.join_timestamp is not None:
+            delta_minutes = (participant.join_timestamp - session.scheduled_start_time).total_seconds() / 60.0
+            if delta_minutes < -0.5:
+                score += 0.08
+            elif delta_minutes > 0.5:
+                score -= 0.08
+
+        reasoning_parts = [
+            f"heuristic score {score:.2f}",
+            f"avg response {avg_duration:.1f}s",
+            f"first-person markers {first_person_markers}",
+        ]
+        if question_markers or interviewer_cues:
+            reasoning_parts.append(
+                f"question/interviewer cues {question_markers + interviewer_cues}"
+            )
+        if interviewer_name_match > 80:
+            reasoning_parts.append("display name resembles an interviewer")
+        if session.scheduled_start_time is not None and participant.join_timestamp is not None:
+            delta_minutes = (participant.join_timestamp - session.scheduled_start_time).total_seconds() / 60.0
+            reasoning_parts.append(f"joined {delta_minutes:+.1f} min from start")
+
+        return participant_id, max(0.05, min(0.95, score)), ". ".join(reasoning_parts) + "."
 
     def _build_prompt(self, session: SessionState) -> str:
         transcript_excerpt = "\n".join(
