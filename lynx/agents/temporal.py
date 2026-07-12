@@ -45,7 +45,8 @@ class TemporalAgent(BaseAgent):
                 ),
             )
 
-        score = math.exp(-0.5 * (delta_minutes / SIGMA_MINUTES) ** 2)
+        raw_score = math.exp(-0.5 * (delta_minutes / SIGMA_MINUTES) ** 2)
+        score = 0.9 * raw_score
         timing_summary = f"Joined {delta_minutes:+.1f} min from scheduled start."
         if delta_minutes < 0:
             timing_summary += " Early join consistent with candidate behavior."

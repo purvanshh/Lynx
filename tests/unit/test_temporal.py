@@ -22,10 +22,10 @@ def make_session(delta_minutes: float) -> SessionState:
 @pytest.mark.parametrize(
     ("delta_minutes", "expected_score"),
     [
-        (0.0, 1.0),
-        (-2.0, 0.726),
-        (-5.0, 0.135),
-        (3.0, 0.487),
+        (0.0, 0.9),
+        (-2.0, 0.654),
+        (-5.0, 0.122),
+        (3.0, 0.438),
         (6.0, 0.0),
         (-10.0, 0.0),
     ],
@@ -50,8 +50,8 @@ def test_temporal_agent_returns_neutral_when_timestamps_missing() -> None:
 @pytest.mark.parametrize(
     ("delta_minutes", "expected_score"),
     [
-        (-5.0, 0.135),
-        (3.0, 0.487),
+        (-5.0, 0.122),
+        (3.0, 0.438),
     ],
 )
 def test_temporal_agent_includes_window_boundaries(delta_minutes: float, expected_score: float) -> None:
