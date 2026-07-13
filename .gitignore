@@ -4,6 +4,8 @@ __pycache__/
 uv.lock
 .pytest_cache/
 .env
+.coverage
+output/
 node_modules/
 dashboard/node_modules/
 dashboard/dist/

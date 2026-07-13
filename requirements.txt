@@ -11,6 +11,7 @@ pytest==8.4.1
 pytest-cov==6.1.1
 ruff==0.15.12
 mypy==1.15.0
+pre-commit==4.2.0
 
 # Optional: FaceConsistencyAgent
 # opencv-python>=4.9

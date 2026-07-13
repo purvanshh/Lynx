@@ -11,7 +11,7 @@ from lynx.utils.time import utc_now
 router = APIRouter(prefix="/sessions", tags=["websocket"])
 
 
-def _build_candidate_payload(output: ArbitratorOutput, session_id: str) -> dict:
+def _build_candidate_payload(output: ArbitratorOutput, session_id: str) -> dict[str, object]:
     return {
         "type": "candidate_update",
         "session_id": session_id,

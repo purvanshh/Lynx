@@ -12,7 +12,7 @@ class WebSocketManager:
     def disconnect(self, session_id: str, websocket: WebSocket) -> None:
         self._connections.get(session_id, set()).discard(websocket)
 
-    async def broadcast(self, session_id: str, data: dict) -> None:
+    async def broadcast(self, session_id: str, data: dict[str, object]) -> None:
         for ws in list(self._connections.get(session_id, set())):
             try:
                 await ws.send_json(data)

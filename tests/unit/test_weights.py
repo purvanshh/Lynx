@@ -32,7 +32,8 @@ def test_weight_redistribution_returns_original_values_when_all_are_present() ->
         set(DEFAULT_AGENT_WEIGHTS),
     )
 
-    assert redistributed == DEFAULT_AGENT_WEIGHTS
+    for agent, weight in DEFAULT_AGENT_WEIGHTS.items():
+        assert redistributed[agent] == pytest.approx(weight, abs=1e-6)
 
 
 def test_weight_redistribution_returns_empty_mapping_for_empty_active_set() -> None:

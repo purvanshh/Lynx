@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
@@ -6,6 +7,7 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 
 from lynx.api.dependencies import get_orchestrator, get_store
 from lynx.api.routes.health import router as health_router
@@ -24,7 +26,7 @@ logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     task = asyncio.create_task(_heartbeat_loop())
     yield
     task.cancel()
@@ -83,7 +85,7 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_request_context(request: Request, call_next):
+async def add_request_context(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     request_id = request.headers.get("x-request-id") or str(uuid4())
     request.state.request_id = request_id
     response = await call_next(request)
