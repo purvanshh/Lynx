@@ -61,7 +61,7 @@ class FaceConsistencyAgent(BaseAgent):
         multi_face_frames = sum(1 for count in face_counts if count > 1)
         transitions = sum(
             1
-            for previous, current in zip(face_counts, face_counts[1:])
+            for previous, current in zip(face_counts, face_counts[1:], strict=False)
             if (previous == 0) != (current == 0)
         )
 

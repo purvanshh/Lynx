@@ -79,7 +79,7 @@ class LLMReasoningAgent(BaseAgent):
             )
 
         candidate_id = llm_payload["participant_id"]
-        confidence = float(llm_payload["confidence"])
+        confidence = float(str(llm_payload["confidence"]))
         explanation = str(llm_payload["explanation"]).strip()
         if candidate_id not in participant_ids:
             return self._heuristic_results(

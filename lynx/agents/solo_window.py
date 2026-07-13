@@ -63,7 +63,7 @@ class SoloWindowAgent(BaseAgent):
             return {}
 
         durations: dict[str, float] = {}
-        for start, end in zip(ordered_boundaries, ordered_boundaries[1:]):
+        for start, end in zip(ordered_boundaries, ordered_boundaries[1:], strict=False):
             if end <= start:
                 continue
 

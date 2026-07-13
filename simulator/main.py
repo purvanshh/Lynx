@@ -7,9 +7,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.request import Request, urlopen
 
+import structlog
+
 from simulator.scheduler import EventScheduler, ScheduledEvent, load_scenario
 
-import structlog
 logger = structlog.get_logger(__name__)
 
 
@@ -41,7 +42,7 @@ async def _post_json(url: str, payload: dict[str, object]) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    response = await asyncio.to_thread(urlopen, request, 10)
+    response = await asyncio.to_thread(urlopen, request, None, 10)
     response.close()
 
 

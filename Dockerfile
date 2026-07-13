@@ -14,9 +14,11 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+COPY pyproject.toml ./
 COPY lynx/ lynx/
 COPY simulator/ simulator/
 COPY scripts/ scripts/
+COPY tests/ tests/
 
 RUN chown -R lynx:lynx /app
 USER lynx

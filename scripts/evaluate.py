@@ -8,12 +8,11 @@ from pathlib import Path
 from typing import Protocol
 
 import httpx
+import structlog
 
 from lynx.api.main import app
 from simulator.main import transform_event
 from simulator.scheduler import ScheduledEvent, load_scenario
-
-import structlog
 
 logger = structlog.get_logger(__name__)
 

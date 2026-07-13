@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from lynx.agents.base import AgentResult, BaseAgent
 from lynx.arbitrator.arbitrator import LogOddsArbitrator
@@ -24,7 +24,7 @@ class AgentOrchestrator:
                 top_candidate_probability=0.0,
                 confidence_tier="UNCERTAIN",
                 arbitrator_explanation="No participants available for evaluation.",
-                updated_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(UTC),
             )
 
         raw_results: dict[str, dict[str, AgentResult | None]] = {}
@@ -79,7 +79,7 @@ class AgentOrchestrator:
                     )
                 )
 
-        top_candidate_id = max(candidate_probabilities, key=candidate_probabilities.get, default=None)
+        top_candidate_id = max(candidate_probabilities, key=candidate_probabilities.get, default=None)  # type: ignore[arg-type]
         top_candidate_probability = (
             candidate_probabilities[top_candidate_id] if top_candidate_id is not None else 0.0
         )
@@ -100,5 +100,5 @@ class AgentOrchestrator:
             top_candidate_probability=top_candidate_probability,
             confidence_tier=confidence_tier(top_candidate_probability),
             arbitrator_explanation=explanation,
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )

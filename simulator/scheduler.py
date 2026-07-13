@@ -59,10 +59,10 @@ class EventScheduler:
         candidate = data.get("candidate", {})
         interviewers = data.get("interviewers", [])
         transcript = data.get("transcript", [])
-        events: list[ScheduledEvent] = []
+        scheduled: list[ScheduledEvent] = []
 
         if candidate:
-            events.append(
+            scheduled.append(
                 ScheduledEvent(
                     offset_seconds=float(candidate.get("join_offset_seconds", 0.0)),
                     event_type="participant_join",
@@ -76,7 +76,7 @@ class EventScheduler:
             )
 
         for interviewer in interviewers:
-            events.append(
+            scheduled.append(
                 ScheduledEvent(
                     offset_seconds=float(interviewer.get("join_offset_seconds", 0.0)),
                     event_type="participant_join",
@@ -91,7 +91,7 @@ class EventScheduler:
 
         name_change = data.get("name_change")
         if name_change:
-            events.append(
+            scheduled.append(
                 ScheduledEvent(
                     offset_seconds=float(name_change["offset_seconds"]),
                     event_type="name_change",
@@ -103,7 +103,7 @@ class EventScheduler:
             )
 
         for utterance in transcript:
-            events.append(
+            scheduled.append(
                 ScheduledEvent(
                     offset_seconds=float(utterance["offset_seconds"]),
                     event_type="transcript",
@@ -114,7 +114,7 @@ class EventScheduler:
                 )
             )
 
-        return sorted(events, key=lambda event: event.offset_seconds)
+        return sorted(scheduled, key=lambda event: event.offset_seconds)
 
 
 def load_scenario(path: Path) -> dict[str, Any]:

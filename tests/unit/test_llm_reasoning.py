@@ -44,7 +44,7 @@ def make_session() -> SessionState:
 
 def test_llm_reasoning_agent_returns_neutral_without_api_key() -> None:
     agent = LLMReasoningAgent(
-        settings=Settings(llm_api_key=None),
+        settings=Settings(llm_api_key=None, llm_enabled=True),
         now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
     )
 
@@ -58,7 +58,7 @@ def test_llm_reasoning_agent_returns_neutral_without_api_key() -> None:
 
 def test_llm_reasoning_agent_maps_llm_choice_to_participant_scores() -> None:
     agent = LLMReasoningAgent(
-        settings=Settings(llm_api_key="test-key"),
+        settings=Settings(llm_api_key="test-key", llm_enabled=True),
         now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
         transport=lambda prompt: {
             "participant_id": "p1",
@@ -84,7 +84,7 @@ def test_llm_reasoning_agent_rate_limits_follow_up_calls() -> None:
         ]
     )
     agent = LLMReasoningAgent(
-        settings=Settings(llm_api_key="test-key", llm_rate_limit_seconds=60),
+        settings=Settings(llm_api_key="test-key", llm_enabled=True, llm_rate_limit_seconds=60),
         now_provider=lambda: next(call_times),
         transport=lambda prompt: {
             "participant_id": "p1",
@@ -103,7 +103,7 @@ def test_llm_reasoning_agent_rate_limits_follow_up_calls() -> None:
 
 def test_llm_reasoning_agent_handles_unknown_participant_response() -> None:
     agent = LLMReasoningAgent(
-        settings=Settings(llm_api_key="test-key"),
+        settings=Settings(llm_api_key="test-key", llm_enabled=True),
         now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
         transport=lambda prompt: {
             "participant_id": "missing",
@@ -136,7 +136,7 @@ def test_llm_reasoning_agent_parses_markdown_wrapped_json() -> None:
 
 def test_llm_reasoning_agent_falls_back_on_malformed_json() -> None:
     agent = LLMReasoningAgent(
-        settings=Settings(llm_api_key="test-key"),
+        settings=Settings(llm_api_key="test-key", llm_enabled=True),
         now_provider=lambda: datetime(2026, 7, 11, 9, 0, tzinfo=timezone.utc),
         transport=lambda prompt: (_ for _ in ()).throw(ValueError("bad json")),
     )

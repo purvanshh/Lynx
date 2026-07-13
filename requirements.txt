@@ -8,7 +8,9 @@ structlog>=24.0,<25.0
 
 # Testing & linting
 pytest==8.4.1
-flake8==7.1.2
+pytest-cov==6.1.1
+ruff==0.15.12
+mypy==1.15.0
 
 # Optional: FaceConsistencyAgent
 # opencv-python>=4.9

@@ -10,7 +10,6 @@ services:
       - LYNX_HOST=0.0.0.0
       - LYNX_PORT=8000
       - LYNX_LOG_LEVEL=INFO
-      - LYNX_LLM_ENABLED=false
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
