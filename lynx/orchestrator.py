@@ -12,8 +12,22 @@ class AgentOrchestrator:
     def __init__(self, agents: list[BaseAgent], arbitrator: LogOddsArbitrator) -> None:
         self.agents = agents
         self.arbitrator = arbitrator
+        self._result_cache: dict[str, tuple[int, ArbitratorOutput]] = {}
 
     def evaluate(self, session: SessionState) -> ArbitratorOutput:
+        version = len(session.event_log)
+        cached = self._result_cache.get(session.session_id)
+        if cached is not None and cached[0] == version:
+            return cached[1]
+
+        result = self._evaluate(session)
+        self._result_cache[session.session_id] = (version, result)
+        return result
+
+    def invalidate_cache(self, session_id: str) -> None:
+        self._result_cache.pop(session_id, None)
+
+    def _evaluate(self, session: SessionState) -> ArbitratorOutput:
         participant_ids = [participant.participant_id for participant in session.participants]
         if not participant_ids:
             return ArbitratorOutput(
