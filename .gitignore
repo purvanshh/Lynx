@@ -6,3 +6,4 @@ uv.lock
 .env
 node_modules/
 dashboard/node_modules/
+dashboard/dist/
