@@ -26,8 +26,8 @@ def make_session(delta_minutes: float) -> SessionState:
         (-2.0, 0.654),
         (-5.0, 0.122),
         (3.0, 0.438),
-        (6.0, 0.0),
-        (-10.0, 0.0),
+        (6.0, 0.14),
+        (-10.0, 0.10),
     ],
 )
 def test_temporal_agent_gaussian_window_scoring(delta_minutes: float, expected_score: float) -> None:

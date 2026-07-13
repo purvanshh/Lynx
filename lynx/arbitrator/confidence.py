@@ -1,8 +1,12 @@
+from lynx.config import get_settings
+
+
 def confidence_tier(probability: float) -> str:
-    if probability >= 0.85:
+    settings = get_settings()
+    if probability >= settings.confidence_high_threshold:
         return "HIGH"
-    if probability >= 0.65:
+    if probability >= settings.confidence_medium_threshold:
         return "MEDIUM"
-    if probability >= 0.45:
+    if probability >= settings.confidence_low_threshold:
         return "LOW"
     return "UNCERTAIN"

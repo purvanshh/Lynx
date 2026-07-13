@@ -17,9 +17,13 @@ def test_weight_redistribution_scales_remaining_agents() -> None:
         {"BehavioralAgent", "SoloWindowAgent", "FaceConsistencyAgent"},
     )
 
-    assert redistributed["BehavioralAgent"] == pytest.approx(0.25 / 0.60, abs=1e-6)
-    assert redistributed["SoloWindowAgent"] == pytest.approx(0.25 / 0.60, abs=1e-6)
-    assert redistributed["FaceConsistencyAgent"] == pytest.approx(0.10 / 0.60, abs=1e-6)
+    total = sum(
+        DEFAULT_AGENT_WEIGHTS[name]
+        for name in {"BehavioralAgent", "SoloWindowAgent", "FaceConsistencyAgent"}
+    )
+    assert redistributed["BehavioralAgent"] == pytest.approx(DEFAULT_AGENT_WEIGHTS["BehavioralAgent"] / total, abs=1e-6)
+    assert redistributed["SoloWindowAgent"] == pytest.approx(DEFAULT_AGENT_WEIGHTS["SoloWindowAgent"] / total, abs=1e-6)
+    assert redistributed["FaceConsistencyAgent"] == pytest.approx(DEFAULT_AGENT_WEIGHTS["FaceConsistencyAgent"] / total, abs=1e-6)
 
 
 def test_weight_redistribution_returns_original_values_when_all_are_present() -> None:

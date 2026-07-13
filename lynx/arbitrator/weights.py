@@ -1,10 +1,11 @@
 DEFAULT_AGENT_WEIGHTS: dict[str, float] = {
     "NameMatcher": 0.15,
-    "TemporalAgent": 0.20,
-    "BehavioralAgent": 0.25,
-    "SoloWindowAgent": 0.25,
-    "FaceConsistencyAgent": 0.10,
+    "TemporalAgent": 0.18,
+    "BehavioralAgent": 0.22,
+    "SoloWindowAgent": 0.22,
+    "FaceConsistencyAgent": 0.08,
     "LLMReasoningAgent": 0.05,
+    "ScreenShareAgent": 0.10,
 }
 
 

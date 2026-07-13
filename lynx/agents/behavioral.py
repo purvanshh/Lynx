@@ -41,7 +41,8 @@ class BehavioralAgent(BaseAgent):
         else:
             session_duration_seconds = 60.0
 
-        turn_frequency = turn_count / (session_duration_seconds / 60.0)
+        session_duration_minutes = max(1.0, session_duration_seconds / 60.0)
+        turn_frequency = min(20.0, turn_count / session_duration_minutes)
         if participant.speaking_activity:
             speaking_seconds = float(sum(1 for active in participant.speaking_activity if active))
             total_activity_seconds = float(len(participant.speaking_activity))
