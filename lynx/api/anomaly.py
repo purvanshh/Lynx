@@ -120,7 +120,7 @@ def _detect_confidence_oscillation(session: SessionState) -> int | None:
     top_ids: list[str | None] = []
     for entry in recent:
         if entry.probabilities:
-            top_id = max(entry.probabilities, key=entry.probabilities.get)
+            top_id = max(entry.probabilities, key=lambda pid: entry.probabilities[pid])
             top_ids.append(top_id)
         else:
             top_ids.append(None)

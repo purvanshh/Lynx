@@ -130,7 +130,8 @@ jobs:
     if: always()
 
     steps:
-      - run: |
+      - name: Report job results
+        run: |
           echo "## Phase 2 Quality Gates" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
@@ -140,9 +141,13 @@ jobs:
           echo "| Dashboard lint & build | ${{ needs.lint-dashboard.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker build | ${{ needs.docker-build.result }} |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Fail if any required job failed
-        run: |
-          [ "${{ needs.lint-python.result }}" = "success" ] \
-          && [ "${{ needs.test-python.result }}" = "success" ] \
-          && [ "${{ needs.lint-dashboard.result }}" = "success" ] \
-          && [ "${{ needs.docker-build.result }}" = "success" ]
+          failed=0
+          for job in lint-python test-python lint-dashboard docker-build; do
+            r="${{ needs[job].result }}"
+            echo "$job=$r"
+            if [ "$r" != "success" ]; then
+              echo "::error::quality-gate: $job is $r"
+              failed=1
+            fi
+          done
+          [ $failed -eq 0 ]
