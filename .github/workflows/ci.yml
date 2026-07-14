@@ -93,6 +93,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Debug build context
+        run: |
+          echo "=== Repo root ==="
+          ls -la
+          echo "=== dashboard/ ==="
+          ls -la dashboard/
+          echo "=== Dockerfiles ==="
+          ls -la Dockerfile dashboard/Dockerfile
+
       - name: Build API image
         uses: docker/build-push-action@v6
         with:
@@ -107,8 +116,8 @@ jobs:
       - name: Build dashboard image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: dashboard/Dockerfile
+          context: ./dashboard
+          file: ./dashboard/Dockerfile
           push: false
           load: true
           tags: lynx-dashboard:ci
@@ -126,39 +135,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Gate | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python lint & type check | ${{ needs.lint-python.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python tests & evaluation | ${{ needs.test-python.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dashboard lint & build | ${{ needs.lint-dashboard.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker build | ${{ needs.docker-build.result }} |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Check lint-python
+      - name: Fail if any required job failed
         run: |
-          if [ "${{ needs.lint-python.result }}" = "success" ]; then
-            echo "| Python lint & type check | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Python lint & type check | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: Check test-python
-        run: |
-          if [ "${{ needs.test-python.result }}" = "success" ]; then
-            echo "| Python tests & evaluation | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Python tests & evaluation | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: Check lint-dashboard
-        run: |
-          if [ "${{ needs.lint-dashboard.result }}" = "success" ]; then
-            echo "| Dashboard lint & build | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Dashboard lint & build | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-      - name: Check docker-build
-        run: |
-          if [ "${{ needs.docker-build.result }}" = "success" ]; then
-            echo "| Docker build | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| Docker build | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          [ "${{ needs.lint-python.result }}" = "success" ] \
+          && [ "${{ needs.test-python.result }}" = "success" ] \
+          && [ "${{ needs.lint-dashboard.result }}" = "success" ] \
+          && [ "${{ needs.docker-build.result }}" = "success" ]

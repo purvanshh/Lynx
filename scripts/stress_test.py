@@ -49,7 +49,7 @@ class AttackAttempt:
 
 
 def _make_timestamp(scheduled_start: str, offset: float) -> str:
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta
     dt = datetime.fromisoformat(scheduled_start.replace("Z", "+00:00"))
     dt += timedelta(seconds=offset)
     return dt.isoformat()
