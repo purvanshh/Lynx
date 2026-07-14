@@ -1,4 +1,4 @@
-.PHONY: dev dev-build test evaluate benchmark stress-test demo clean
+.PHONY: dev dev-build test evaluate benchmark stress-test robustness-test demo clean
 
 dev:
 	docker compose up
@@ -23,6 +23,12 @@ stress-test:
 	@echo "Waiting for API to be healthy..."
 	sleep 3
 	docker compose exec api python -m scripts.stress_test
+
+robustness-test:
+	docker compose up -d api
+	@echo "Waiting for API to be healthy..."
+	sleep 3
+	docker compose exec api python -m scripts.robustness_test
 
 demo:
 	docker compose up --build -d
