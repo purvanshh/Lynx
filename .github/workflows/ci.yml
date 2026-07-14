@@ -141,13 +141,20 @@ jobs:
           echo "| Dashboard lint & build | ${{ needs.lint-dashboard.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker build | ${{ needs.docker-build.result }} |" >> $GITHUB_STEP_SUMMARY
 
-          failed=0
-          for job in lint-python test-python lint-dashboard docker-build; do
-            r="${{ needs[job].result }}"
-            echo "$job=$r"
-            if [ "$r" != "success" ]; then
-              echo "::error::quality-gate: $job is $r"
-              failed=1
+          check_job() {
+            name="$1"
+            result="$2"
+            echo "$name=$result"
+            if [ "$result" != "success" ]; then
+              echo "::error::quality-gate: $name is $result"
+              return 1
             fi
-          done
+            return 0
+          }
+
+          failed=0
+          check_job "lint-python" "${{ needs.lint-python.result }}" || failed=1
+          check_job "test-python" "${{ needs.test-python.result }}" || failed=1
+          check_job "lint-dashboard" "${{ needs.lint-dashboard.result }}" || failed=1
+          check_job "docker-build" "${{ needs.docker-build.result }}" || failed=1
           [ $failed -eq 0 ]
