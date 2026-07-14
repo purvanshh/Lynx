@@ -1,4 +1,5 @@
 import type {
+  AnomalyInfo,
   CandidateOutput,
   ConfidenceHistoryPoint,
   CreateSessionRequest,
@@ -43,4 +44,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify(event),
     }),
+  getAnomalies: (sessionId: string) =>
+    request<{ session_id: string; anomalies: AnomalyInfo[] }>(`/sessions/${sessionId}/anomalies`),
 };

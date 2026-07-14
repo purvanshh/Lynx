@@ -1,4 +1,4 @@
-.PHONY: dev dev-build test evaluate benchmark stress-test robustness-test demo clean
+.PHONY: dev dev-build test evaluate benchmark stress-test robustness-test prometheus demo clean
 
 dev:
 	docker compose up
@@ -29,6 +29,16 @@ robustness-test:
 	@echo "Waiting for API to be healthy..."
 	sleep 3
 	docker compose exec api python -m scripts.robustness_test
+
+prometheus:
+	docker compose up -d api prometheus grafana
+	@echo ""
+	@echo "============================================"
+	@echo "  Lynx Observability Stack"
+	@echo "  API:        http://localhost:8000"
+	@echo "  Prometheus: http://localhost:9090"
+	@echo "  Grafana:    http://localhost:3001"
+	@echo "============================================"
 
 demo:
 	docker compose up --build -d

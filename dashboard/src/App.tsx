@@ -24,7 +24,7 @@ export default function App() {
   const [draftSessionId, setDraftSessionId] = useState(initialSessionId);
   const [activeSessionId, setActiveSessionId] = useState(initialSessionId);
   const [selectedParticipantId, setSelectedParticipantId] = useState<string | null>(null);
-  const { session, candidate, history, loading, error } = useSession(activeSessionId);
+  const { session, candidate, history, anomalies, loading, error } = useSession(activeSessionId);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -119,7 +119,7 @@ export default function App() {
         </form>
       </section>
 
-      <UncertaintyBanner tier={candidate?.confidence_tier} topTwo={topTwo} />
+      <UncertaintyBanner tier={candidate?.confidence_tier} topTwo={topTwo} anomalies={anomalies} />
 
       {!activeSessionId ? (
         <section className="empty-state">

@@ -162,6 +162,44 @@ button {
   background: linear-gradient(90deg, rgba(255, 244, 239, 0.95), rgba(255, 250, 246, 0.88));
 }
 
+.anomaly-banner {
+  padding: 20px 22px;
+  border-radius: 24px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: linear-gradient(90deg, rgba(255, 251, 235, 0.95), rgba(255, 248, 240, 0.88));
+}
+
+.anomaly-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.anomaly-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border-left: 4px solid #f59e0b;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.anomaly-list li strong {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #92400e;
+}
+
+.anomaly-list li span {
+  font-size: 0.92rem;
+  color: #555;
+}
+
 .uncertainty-banner ul,
 .history-list,
 .participant-evidence-list,

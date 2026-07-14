@@ -1,0 +1,102 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "title": "Lynx Observability",
+  "description": "Live metrics for Lynx candidate identification system",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Sessions",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [
+        { "expr": "lynx_active_sessions", "legendFormat": "active sessions" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": -1, "color": "green" }] }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Evaluation Latency (P50 / P95 / P99)",
+      "type": "timeseries",
+      "gridPos": { "x": 4, "y": 0, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(lynx_evaluation_latency_seconds_bucket[1m])) by (le))", "legendFormat": "P50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(lynx_evaluation_latency_seconds_bucket[1m])) by (le))", "legendFormat": "P95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(lynx_evaluation_latency_seconds_bucket[1m])) by (le))", "legendFormat": "P99" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Top Candidate Probability",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "lynx_top_candidate_probability", "legendFormat": "{{session_id}}" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Anomaly Rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "rate(lynx_anomalies_total[1m])", "legendFormat": "{{rule}}" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Anomaly Total by Rule",
+      "type": "bargauge",
+      "gridPos": { "x": 8, "y": 4, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "lynx_anomalies_total", "legendFormat": "{{rule}}" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "HTTP Request Duration (P95)",
+      "type": "timeseries",
+      "gridPos": { "x": 16, "y": 4, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(lynx_http_request_duration_seconds_bucket[1m])) by (le, method, path))", "legendFormat": "{{method}} {{path}}" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Confidence Tier Distribution",
+      "type": "piechart",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "count(lynx_confidence_tier == 1)", "legendFormat": "HIGH" },
+        { "expr": "count(lynx_confidence_tier == 2)", "legendFormat": "MEDIUM" },
+        { "expr": "count(lynx_confidence_tier == 3)", "legendFormat": "LOW" },
+        { "expr": "count(lynx_confidence_tier == 4)", "legendFormat": "UNCERTAIN" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Agent Evaluation Latency",
+      "type": "timeseries",
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 4 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum(rate(lynx_agent_evaluation_latency_seconds_bucket[1m])) by (le, agent))", "legendFormat": "{{agent}}" }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Sessions Created",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 8, "w": 4, "h": 4 },
+      "targets": [
+        { "expr": "lynx_sessions_created_total", "legendFormat": "total sessions" }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

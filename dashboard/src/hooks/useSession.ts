@@ -1,12 +1,13 @@
 import { startTransition, useEffect, useState } from "react";
 
 import { api } from "../api/client";
-import type { CandidateOutput, ConfidenceHistoryPoint, Session } from "../types";
+import type { AnomalyInfo, CandidateOutput, ConfidenceHistoryPoint, Session } from "../types";
 
 export function useSession(sessionId: string) {
   const [session, setSession] = useState<Session | null>(null);
   const [candidate, setCandidate] = useState<CandidateOutput | null>(null);
   const [history, setHistory] = useState<ConfidenceHistoryPoint[]>([]);
+  const [anomalies, setAnomalies] = useState<AnomalyInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +16,7 @@ export function useSession(sessionId: string) {
       setSession(null);
       setCandidate(null);
       setHistory([]);
+      setAnomalies([]);
       setError(null);
       return;
     }
@@ -24,10 +26,11 @@ export function useSession(sessionId: string) {
     async function loadSnapshot() {
       setLoading(true);
       try {
-        const [sessionResponse, candidateResponse, historyResponse] = await Promise.all([
+        const [sessionResponse, candidateResponse, historyResponse, anomaliesResponse] = await Promise.all([
           api.getSession(sessionId),
           api.getCandidate(sessionId),
           api.getConfidenceHistory(sessionId),
+          api.getAnomalies(sessionId),
         ]);
 
         if (!active) {
@@ -38,6 +41,7 @@ export function useSession(sessionId: string) {
           setSession(sessionResponse);
           setCandidate(candidateResponse);
           setHistory(historyResponse.history);
+          setAnomalies(anomaliesResponse.anomalies ?? []);
           setError(null);
         });
       } catch (loadError) {
@@ -66,5 +70,5 @@ export function useSession(sessionId: string) {
     };
   }, [sessionId]);
 
-  return { session, candidate, history, loading, error };
+  return { session, candidate, history, anomalies, loading, error };
 }

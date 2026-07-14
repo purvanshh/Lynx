@@ -60,6 +60,13 @@ export interface CreateSessionRequest {
   scheduled_start_time?: string | null;
 }
 
+export interface AnomalyInfo {
+  rule: string;
+  severity: string;
+  message: string;
+  details: Record<string, unknown>;
+}
+
 export interface EventRequest {
   type: SessionEvent["type"];
   timestamp: string;
