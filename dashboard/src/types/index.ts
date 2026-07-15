@@ -80,3 +80,13 @@ export interface EventRequest {
   face_count?: number;
   image_path?: string;
 }
+
+export interface AnalyticsSummary {
+  total_sessions: number;
+  total_participants: number;
+  total_events: number;
+  tier_distribution: Record<string, number>;
+  agent_activation_count: Record<string, number>;
+  confidence_histogram: Array<{ bucket_lower: number; bucket_upper: number; count: number }>;
+  average_confidence: number;
+}

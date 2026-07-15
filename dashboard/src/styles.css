@@ -45,6 +45,32 @@ button {
   padding: 24px 0 56px;
 }
 
+.app-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border-radius: 16px;
+  background: rgba(19, 34, 56, 0.06);
+}
+
+.app-nav-btn {
+  flex: 1;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  font-weight: 600;
+  color: #55657b;
+  transition: all 0.2s;
+}
+
+.app-nav-btn--active {
+  background: #fff;
+  color: #132238;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .hero-panel,
 .status-card,
 .uncertainty-banner,
@@ -603,6 +629,63 @@ button {
   padding: 12px 14px;
   border-radius: 16px;
   background: rgba(244, 248, 253, 0.85);
+}
+
+.feedback-row {
+  display: flex;
+  gap: 10px;
+}
+
+.feedback-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  transition: opacity 0.2s;
+}
+
+.feedback-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.feedback-btn--correct {
+  background: linear-gradient(135deg, #1f9964, #41cf8f);
+  color: #f7fffb;
+}
+
+.feedback-btn--incorrect {
+  background: linear-gradient(135deg, #cf4d4d, #ff8a7f);
+  color: #fff8f7;
+}
+
+.feedback-message {
+  margin: 10px 0 0;
+  color: #55657b;
+  font-size: 0.9rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analytics-big-number {
+  margin: 8px 0 0;
+  font-size: 2.4rem;
+  font-family: "IBM Plex Serif", Georgia, serif;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.analytics-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
 }
 
 @media (max-width: 1080px) {

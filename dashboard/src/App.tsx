@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { AnalyticsPage } from "./components/AnalyticsPage";
 import { ConfidenceMeter } from "./components/ConfidenceMeter";
 import { EvidencePanel } from "./components/EvidencePanel";
+import { FeedbackControls } from "./components/FeedbackControls";
 import { ParticipantCard } from "./components/ParticipantCard";
 import { SessionTimeline } from "./components/SessionTimeline";
 import { UncertaintyBanner } from "./components/UncertaintyBanner";
@@ -19,6 +21,7 @@ function formatScheduledTime(value: string | null): string {
 }
 
 export default function App() {
+  const [mode, setMode] = useState<"dashboard" | "analytics">("dashboard");
   const initialSessionId =
     new URLSearchParams(window.location.search).get("sessionId") ?? window.localStorage.getItem("lynx-session-id") ?? "";
   const [draftSessionId, setDraftSessionId] = useState(initialSessionId);
@@ -94,7 +97,14 @@ export default function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-panel">
+      <nav className="app-nav">
+        <button className={`app-nav-btn ${mode === "dashboard" ? "app-nav-btn--active" : ""}`} onClick={() => setMode("dashboard")}>Dashboard</button>
+        <button className={`app-nav-btn ${mode === "analytics" ? "app-nav-btn--active" : ""}`} onClick={() => setMode("analytics")}>Analytics</button>
+      </nav>
+
+      {mode === "analytics" ? <AnalyticsPage /> : null}
+
+      {mode === "dashboard" ? (<>
         <div>
           <p className="eyebrow">Live Candidate Identification</p>
           <h1>Lynx Operations Dashboard</h1>
@@ -235,9 +245,16 @@ export default function App() {
                 <p className="muted-copy">Confidence history will populate after the first event-driven evaluation.</p>
               )}
             </section>
+
+            <FeedbackControls
+              sessionId={activeSessionId}
+              topCandidateId={candidate?.participant_id ?? null}
+              onFeedbackSubmitted={() => {}}
+            />
           </div>
         </section>
       ) : null}
+      </>) : null}
     </main>
   );
 }

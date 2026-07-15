@@ -21,6 +21,7 @@ from lynx.api.metrics import (
     top_probability_gauge,
 )
 from lynx.api.routes.analytics import router as analytics_router
+from lynx.api.routes.analytics_summary import router as analytics_summary_router
 from lynx.api.routes.health import router as health_router
 from lynx.api.routes.participants import router as participants_router
 from lynx.api.routes.sessions import router as sessions_router
@@ -159,6 +160,7 @@ async def metrics() -> PlainTextResponse:
 
 
 app.include_router(analytics_router)
+app.include_router(analytics_summary_router)
 app.include_router(health_router)
 app.include_router(sessions_router)
 app.include_router(participants_router)

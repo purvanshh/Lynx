@@ -46,4 +46,14 @@ export const api = {
     }),
   getAnomalies: (sessionId: string) =>
     request<{ session_id: string; anomalies: AnomalyInfo[] }>(`/sessions/${sessionId}/anomalies`),
+  submitFeedback: (sessionId: string, correctCandidateId: string, confidence?: number, notes?: string) =>
+    request<{ status: string; session_id: string; correct_candidate_id: string; adapted_weights: Record<string, number> }>(
+      `/sessions/${sessionId}/feedback`,
+      {
+        method: "POST",
+        body: JSON.stringify({ correct_candidate_id: correctCandidateId, confidence, notes }),
+      },
+    ),
+  getAnalyticsSummary: () =>
+    request<AnalyticsSummary>("/analytics/summary"),
 };
