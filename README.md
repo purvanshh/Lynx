@@ -1,6 +1,6 @@
 # Lynx Candidate Identification System
 
-Lynx is a real-time, multi-agent Bayesian fusion system that automatically identifies the interview candidate from a pool of video conference participants. It continuously evaluates evidence across six independent signal agents, fuses them through a weighted log-odds arbitrator, and produces explainable confidence scores with a full human-readable audit trail for every identification decision.
+Lynx is a real-time, multi-agent Bayesian fusion system that automatically identifies the interview candidate from a pool of video conference participants. It continuously evaluates evidence across seven independent signal agents (plus dynamically loaded plugins), fuses them through a weighted log-odds arbitrator, and produces explainable confidence scores with a full human-readable audit trail for every identification decision.
 
 During a live interview on Google Meet, Teams, or Zoom, Lynx answers a single operational question with precision: *Which participant is the candidate right now, and why?*
 
@@ -18,16 +18,18 @@ The system explains every decision. When Lynx identifies a participant as the ca
 
 ### Multi-Agent Evidence Fusion
 
-Lynx runs six independent signal agents against every participant in a session:
+Lynx runs seven built-in signal agents against every participant in a session, plus any plugins dropped into `plugins/`:
 
 | Agent | Signal | Weight |
 |-------|--------|--------|
 | **NameMatcher** | Fuzzy match of display name against candidate name, email prefix, and interviewer negative list | 0.15 |
-| **Temporal** | Join time relative to scheduled start — candidates join within a tight window | 0.20 |
-| **Behavioral** | Speaking pattern analysis — burst responses vs. uniform interviewer turns | 0.25 |
-| **SoloWindow** | Detection of solo presence before others join — a near-certain candidate signal | 0.25 |
-| **FaceConsistency** | Intra-session face consistency via MediaPipe — single face, no switching | 0.10 |
+| **Temporal** | Join time relative to scheduled start — candidates join within a tight window | 0.18 |
+| **Behavioral** | Speaking pattern analysis — burst responses vs. uniform interviewer turns | 0.22 |
+| **SoloWindow** | Detection of solo presence before others join — a near-certain candidate signal | 0.22 |
+| **FaceConsistency** | Intra-session face consistency via MediaPipe — single face, no switching | 0.08 |
 | **LLMReasoning** | Cross-signal synthesis and edge-case reasoning via GPT-4o-mini | 0.05 |
+| **ScreenShare** | Screen sharing events — candidates share their screen more frequently | 0.10 |
+| *Plugin agents* | Dynamically loaded from `plugins/*.py` | Configurable |
 
 Each agent returns a probability score and a natural language reasoning string. The system handles missing signals gracefully: if an agent cannot produce a score for any participant — for example, when no solo window exists or all webcams are off — its weight is automatically redistributed across the remaining active agents.
 
@@ -65,7 +67,11 @@ Lynx exposes a complete FastAPI surface for session lifecycle and live evaluatio
 - `POST /sessions/{id}/events` — Inject live events: participant joins, leaves, name changes, transcript utterances, speaking activity, webcam frames
 - `GET /sessions/{id}/candidate` — Get the current top candidate with full evidence array, confidence tier, and arbitrator explanation
 - `GET /sessions/{id}/confidence-history` — Time-series of probability evolution per participant
-- `WS /sessions/{id}/ws` — Stream real-time candidate updates and heartbeat messages
+- `POST /sessions/{id}/feedback` — Human feedback to correct/confirm identification; adapts agent weights via EMA
+- `GET /sessions/{id}/anomalies` — Recent anomaly alerts (confidence drops, face drops, dual candidates, oscillation)
+- `WS /sessions/{id}/ws` — Stream real-time candidate updates, heartbeat messages, and anomaly alerts
+- `GET /analytics/summary` — Aggregate metrics across all sessions (tier distribution, confidence histogram, agent activation)
+- `GET /metrics` — Prometheus scrape endpoint
 - `GET /health` — Service health check
 
 Event injection and a background 30-second heartbeat both trigger re-evaluation: orchestrator → agents → arbitrator → updated confidence store. Results are broadcast to all WebSocket clients connected to the session.
@@ -107,8 +113,46 @@ The React dashboard provides a real-time operational view of any active session:
 - **Participant Cards** — Per-participant probability, evidence list, and webcam status
 - **Session Timeline** — Chronological visualization of joins, leaves, speaking events, and transcript utterances
 - **Uncertainty Banner** — Dynamic alert when confidence drops to UNCERTAIN, surfacing the top two candidates and recommending human review
+- **Feedback Controls** — "Mark Correct / Mark Incorrect" buttons to confirm or correct identification, adapting agent weights in real time
+- **Anomaly Alerts** — Real-time banners for confidence drops, face score drops, dual candidate detection, and oscillation
 
 The dashboard polls the API every five seconds and optionally connects via WebSocket for push-based real-time updates.
+
+### Multi-Session Analytics
+
+The analytics dashboard provides cross-session operational intelligence:
+
+- **Confidence Tier Breakdown** — Pie chart of HIGH / MEDIUM / LOW / UNCERTAIN distributions across all sessions
+- **Confidence Histogram** — Bar chart showing the distribution of top-candidate probabilities
+- **Agent Activation Heatmap** — Activity levels per agent across all sessions
+- **Aggregate Metrics** — Total sessions, participants, events processed, and average confidence
+
+### Human Feedback Loop
+
+Lynx supports human-in-the-loop weight adaptation. When an operator confirms or corrects the system's identification:
+
+1. `POST /sessions/{id}/feedback` receives the correct candidate ID
+2. Agents that scored the correct candidate highly increase in weight; those that scored it lowly decrease
+3. EMA update with α=0.15, clamped to [0.02, 0.50], then re-normalized
+4. Adapted weights persist to `data/adapted_weights.json` and survive restarts
+
+### Anomaly Detection & Observability
+
+Lynx detects operational anomalies in real time:
+
+- **Confidence Drop** — Warning when top-candidate probability drops by >0.3 between evaluations
+- **Face Score Drop** — Face consistency score below 0.5 for the top candidate
+- **Dual Candidate** — Multiple participants with candidate-like signals
+- **Late Join** — Participant joins >180s after scheduled start
+- **Confidence Oscillation** — Top candidate identity flip-flops across recent evaluations
+
+Prometheus metrics expose evaluation latency, agent eval times, confidence tiers, and anomaly counts. A pre-built Grafana dashboard visualizes the full observability stack.
+
+### Plugin Architecture
+
+Lynx supports dynamic agent registration without code changes. Drop a Python file into `plugins/` that inherits from `BaseAgent`, restart the API, and the agent appears in the evidence array automatically.
+
+See `docs/PLUGINS.md` for the "Build Your First Agent in 10 Minutes" tutorial.
 
 ---
 
@@ -192,42 +236,52 @@ Key architectural decisions:
 ```
 lynx/
 ├── lynx/                          # Backend application
-│   ├── agents/                    # Signal agents
+│   ├── agents/                    # Signal agents (7 built-in + plugin loader)
+│   │   ├── base.py                # Abstract BaseAgent
+│   │   ├── plugin_loader.py       # Dynamic plugin discovery
 │   │   ├── name_matcher.py
 │   │   ├── temporal.py
 │   │   ├── behavioral.py
 │   │   ├── solo_window.py
 │   │   ├── face_consistency.py
-│   │   └── llm_reasoning.py
-│   ├── api/                       # FastAPI routes, schemas, WebSocket
+│   │   ├── llm_reasoning.py
+│   │   └── screen_share.py
+│   ├── api/                       # FastAPI routes, schemas, WebSocket, metrics
+│   │   ├── main.py                # App factory, middleware, /metrics
+│   │   ├── schemas.py             # Pydantic request/response schemas
+│   │   ├── metrics.py             # Prometheus metric definitions
+│   │   ├── anomaly.py             # Anomaly detection rules
 │   │   ├── ws_manager.py          # WebSocket connection manager
 │   │   └── routes/
-│   │       ├── sessions.py        # Session CRUD + event injection
+│   │       ├── sessions.py        # Session CRUD + event injection + feedback
 │   │       ├── participants.py    # Participant + candidate endpoints
+│   │       ├── analytics.py       # Per-session anomaly endpoint
+│   │       ├── analytics_summary.py  # Cross-session aggregate analytics
 │   │       ├── ws.py              # WebSocket live stream endpoint
 │   │       └── health.py          # Health check
-│   ├── arbitrator/                # Log-odds fusion engine
+│   ├── arbitrator/                # Log-odds fusion engine + weight adaptation
+│   │   ├── arbitrator.py          # LogOddsArbitrator
+│   │   ├── confidence.py          # Confidence tier classification
+│   │   └── weights.py             # DEFAULT_AGENT_WEIGHTS + EMA feedback adaptation
 │   ├── models/                    # Pydantic domain models
-│   ├── store/                     # Session storage layer
-│   └── utils/                     # Shared helpers
+│   ├── store/                     # Session storage (in-memory + JSON persistence)
+│   └── utils/                     # Logging, time helpers
+│
+├── plugins/                       # Drop-in agent plugins
+│   └── engagement_agent.py        # Example plugin
 │
 ├── simulator/                     # Scenario playback and scheduling
 │   ├── scheduler.py
 │   ├── main.py
 │   └── scenarios/                 # 7 predefined edge-case scenarios
-│       ├── happy_path.json
-│       ├── generic_name.json
-│       ├── multiple_interviewers.json
-│       ├── name_change.json
-│       ├── interviewer_candidate_name.json
-│       ├── no_solo_window.json
-│       └── webcam_off.json
 │
-├── dashboard/                     # React frontend
+├── dashboard/                     # React + TypeScript frontend
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── AnalyticsPage.tsx  # Cross-session analytics (Recharts)
 │   │   │   ├── ConfidenceMeter.tsx
 │   │   │   ├── EvidencePanel.tsx
+│   │   │   ├── FeedbackControls.tsx  # Mark Correct / Incorrect
 │   │   │   ├── ParticipantCard.tsx
 │   │   │   ├── SessionTimeline.tsx
 │   │   │   └── UncertaintyBanner.tsx
@@ -237,22 +291,28 @@ lynx/
 │   │   │   └── client.ts
 │   │   └── types/
 │   │       └── index.ts
-│   └── public/
 │
-├── tests/                         # Unit and integration tests
+├── tests/                         # 74 unit + integration tests
 │   ├── unit/
 │   └── integration/
 │
 ├── docs/                          # Documentation
-│   ├── PRD.md
-│   ├── ARCHITECTURE.md
-│   └── API.md
+│   ├── PRD.md, ARCHITECTURE.md, API.md
+│   ├── FEEDBACK.md                # Human feedback loop reference
+│   ├── PLUGINS.md                 # Plugin development tutorial
+│   ├── PERFORMANCE.md             # Latency benchmark results
+│   ├── ROBUSTNESS.md              # Noise injection results
+│   └── SECURITY_AUDIT.md          # Adversarial attack resistance
 │
 ├── scripts/                       # Development utilities
-│   ├── run_simulator.py
-│   ├── evaluate.py
-│   └── seed_data.py
+│   ├── run_simulator.py, evaluate.py, benchmark.py
+│   ├── seed_data.py, stress_test.py, robustness_test.py
+│   └── noise_injector.py
 │
+├── prometheus/                    # Prometheus scrape config
+├── docker-compose.yml             # API + Dashboard + Prometheus + Grafana
+├── Dockerfile                     # Multi-stage Python build
+├── Makefile                       # dev, test, evaluate, benchmark, demo, prometheus
 ├── requirements.txt
 └── pyproject.toml
 ```
@@ -261,10 +321,21 @@ lynx/
 
 ## Quick Start
 
-### Prerequisites
+### Docker (Quickest)
+
+```bash
+git clone https://github.com/purvanshh/Lynx.git
+cd Lynx
+docker compose up --build
+```
+
+Open `http://localhost:3000` for the dashboard. The API is at `http://localhost:8000/docs`.
+
+### Prerequisites (Manual)
 
 - Python 3.11+
 - Node.js 18+ (for dashboard)
+- Docker & Docker Compose (optional, for observability stack)
 - An OpenAI-compatible API key (optional, for LLMReasoningAgent)
 
 ### Environment Setup
@@ -317,7 +388,20 @@ This executes all seven scenarios, measures identification accuracy, time-to-cor
 pytest
 ```
 
-The test suite covers all six agents, the log-odds arbitrator, weight redistribution, the event scheduler, and end-to-end API flows.
+The test suite covers all agents, the log-odds arbitrator, weight redistribution, the event scheduler, and end-to-end API flows (74 tests).
+
+### Makefile Targets
+
+```bash
+make dev           # docker compose up
+make test          # Run tests in Docker
+make evaluate      # Run evaluation suite
+make benchmark     # Run latency benchmarks
+make demo          # Full stack + happy path simulator at 5x
+make prometheus    # Start API + Prometheus + Grafana
+make stress-test   # Adversarial attack resistance test
+make robustness-test  # Noise injection robustness test
+```
 
 ---
 
@@ -480,13 +564,16 @@ Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from s
 | Language | Python 3.11 | Ecosystem, readability, rapid prototyping |
 | API | FastAPI | Async-native, auto-generated OpenAPI docs, familiar |
 | Agent Orchestration | Custom Python | Simpler, more inspectable than framework solutions |
+| Weight Adaptation | EMA feedback loop | Human-in-the-loop continuous improvement |
 | Fuzzy Matching | RapidFuzz | Fast, accurate token-sort ratio |
 | Face Detection | MediaPipe | Lightweight, CPU-only, no GPU dependency |
 | LLM | OpenAI GPT-4o-mini (configurable) | Strong reasoning with cost efficiency; OpenAI-compatible |
-| Frontend | React + TypeScript | Live updates, type safety, component ecosystem |
-| Testing | pytest | Unit, integration, and end-to-end coverage |
+| Frontend | React + TypeScript + Recharts | Live updates, analytics charts, type safety |
+| Testing | pytest (74 tests) | Unit, integration, and end-to-end coverage |
+| Metrics | Prometheus + Grafana | Latency histograms, agent eval times, anomaly counts |
 | Logging | structlog | Structured JSON logging with timestamps and context |
 | Simulator | Custom Python + asyncio | Real-time event scheduling with speed control |
+| Container | Docker + Docker Compose | Clone-and-run demo, 4-service stack |
 
 ---
 
@@ -495,6 +582,11 @@ Scenarios are evaluated at fixed checkpoints — 30s, 60s, 120s, and 300s from s
 - **PRD** — Full product requirements: `docs/PRD.md`
 - **Architecture** — Design decisions and data flow: `docs/ARCHITECTURE.md`
 - **API** — Endpoint contracts and examples: `docs/API.md`
+- **Feedback Loop** — Human-in-the-loop weight adaptation: `docs/FEEDBACK.md`
+- **Plugins** — Build your own agent: `docs/PLUGINS.md`
+- **Performance** — Latency benchmarks: `docs/PERFORMANCE.md`
+- **Robustness** — Noise injection results: `docs/ROBUSTNESS.md`
+- **Security** — Adversarial attack resistance: `docs/SECURITY_AUDIT.md`
 
 ---
 
