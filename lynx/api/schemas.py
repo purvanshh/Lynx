@@ -23,3 +23,9 @@ class EventRequest(BaseModel):
     activity: list[bool] = Field(default_factory=list)
     face_count: int | None = None
     image_path: str | None = None
+
+
+class FeedbackRequest(BaseModel):
+    correct_candidate_id: str
+    confidence: float | None = None
+    notes: str | None = None

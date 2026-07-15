@@ -6,6 +6,7 @@ uv.lock
 .env
 .coverage
 output/
+data/
 node_modules/
 dashboard/node_modules/
 dashboard/dist/

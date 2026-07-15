@@ -60,7 +60,7 @@ class AgentOrchestrator:
             if any(result is not None for result in raw_results[agent.name].values())
         }
         redistributed_weights = redistribute_global_weights(
-            {agent.name: agent.weight for agent in self.agents},
+            {agent.name: agent.get_effective_weight() for agent in self.agents},
             globally_active,
         )
 

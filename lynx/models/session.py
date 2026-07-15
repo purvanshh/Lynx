@@ -33,3 +33,4 @@ class SessionState(BaseModel):
     prior_probabilities: dict[str, float] = Field(default_factory=dict)
     confidence_history: list[ConfidenceHistoryEntry] = Field(default_factory=list)
     event_log: list[SessionEventEntry] = Field(default_factory=list)
+    correct_candidate_id: str | None = None

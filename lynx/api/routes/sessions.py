@@ -1,10 +1,12 @@
 from uuid import uuid4
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException
 
 from lynx.api.dependencies import get_orchestrator, get_store
-from lynx.api.schemas import CreateSessionRequest, EventRequest
+from lynx.api.schemas import CreateSessionRequest, EventRequest, FeedbackRequest
 from lynx.api.ws_manager import ws_manager
+from lynx.arbitrator.weights import adapt_weights_from_feedback
 from lynx.models.evidence import ArbitratorOutput
 from lynx.models.participant import Participant, WebcamFrame
 from lynx.models.session import ConfidenceHistoryEntry, SessionEventEntry, SessionState
@@ -14,6 +16,8 @@ from lynx.store.memory_store import InMemorySessionStore
 from lynx.utils.time import utc_now
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
+
+logger = structlog.get_logger(__name__)
 
 
 def _find_participant(session: SessionState, participant_id: str) -> Participant:
@@ -212,4 +216,47 @@ def get_confidence_history(
     return {
         "session_id": session_id,
         "history": [entry.model_dump(mode="json") for entry in session.confidence_history],
+    }
+
+
+@router.post("/{session_id}/feedback")
+def submit_feedback(
+    session_id: str,
+    feedback: FeedbackRequest,
+    store: InMemorySessionStore = Depends(get_store),
+    orchestrator: AgentOrchestrator = Depends(get_orchestrator),
+) -> dict[str, object]:
+    session = store.get(session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session.correct_candidate_id = feedback.correct_candidate_id
+    store.update(session)
+    orchestrator.invalidate_cache(session_id)
+
+    output = orchestrator.evaluate(session)
+
+    new_weights = adapt_weights_from_feedback(
+        session_id=session_id,
+        agents=orchestrator.agents,
+        evidence=output.evidence,
+        correct_candidate_id=feedback.correct_candidate_id,
+    )
+
+    for agent in orchestrator.agents:
+        if agent.name in new_weights:
+            agent._weight_override = new_weights[agent.name]
+
+    logger.info(
+        "feedback_applied",
+        session_id=session_id,
+        correct_candidate_id=feedback.correct_candidate_id,
+        new_weights=new_weights,
+    )
+
+    return {
+        "status": "feedback_applied",
+        "session_id": session_id,
+        "correct_candidate_id": feedback.correct_candidate_id,
+        "adapted_weights": new_weights,
     }
