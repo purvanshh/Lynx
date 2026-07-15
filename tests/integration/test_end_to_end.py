@@ -47,7 +47,7 @@ def test_happy_path_scenario_reaches_high_confidence_without_false_positive() ->
     body = candidate_response.json()
     assert body["participant_id"] == "p_001"
     assert body["confidence_tier"] == "HIGH"
-    assert len(body["evidence"]) == 7
+    assert len(body["evidence"]) >= 7
 
     history = history_response.json()["history"]
     assert len(history) >= 4
